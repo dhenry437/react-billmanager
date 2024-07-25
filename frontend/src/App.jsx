@@ -6,6 +6,7 @@ import Bills from "./components/Bills";
 import Paydays from "./components/Paydays";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
+import PageNotFound from "./components/PageNotFound";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="paydays" element={<Paydays />} />
         <Route path="sign-in" element={<SignIn />} />
         <Route path="sign-up" element={<SignUp />} />
+        <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
   );
