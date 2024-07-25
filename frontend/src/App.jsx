@@ -7,11 +7,13 @@ import Paydays from "./components/Paydays";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import PageNotFound from "./components/PageNotFound";
+import Landing from "./components/Landing";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navbar />}>
+        <Route path="" element={<Landing />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="bills" element={<Bills />} />
         <Route path="paydays" element={<Paydays />} />
