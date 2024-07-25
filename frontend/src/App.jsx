@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./components/Dashboard";
 import Bills from "./components/Bills";
 import Paydays from "./components/Paydays";
+import SignIn from "./components/SignIn";
+import SignUp from "./components/SignUp";
 
 function App() {
   return (
@@ -12,7 +14,8 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="bills" element={<Bills />} />
         <Route path="paydays" element={<Paydays />} />
-        {/* <Route path="sign-in" element={<SignIn />} /> */}
+        <Route path="sign-in" element={<SignIn />} />
+        <Route path="sign-up" element={<SignUp />} />
       </Route>
     </Routes>
   );

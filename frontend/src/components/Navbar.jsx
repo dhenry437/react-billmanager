@@ -14,13 +14,13 @@ import { Outlet, Link, useMatch } from "react-router-dom";
 import mark from "../assets/mark.svg";
 
 export default function Navbar() {
-  // const user = null;
-  const user = {
-    name: "Tom Cook",
-    email: "tom@example.com",
-    imageUrl:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  };
+  const user = null;
+  // const user = {
+  //   name: "Tom Cook",
+  //   email: "tom@example.com",
+  //   imageUrl:
+  //     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+  // };
   const navigation = [
     { name: "Dashboard", href: "/dashboard", current: useMatch("/dashboard") },
     { name: "Bills", href: "/bills", current: useMatch("/bills") },
@@ -170,7 +170,6 @@ export default function Navbar() {
                       </div>
                       <div className="mt-3 space-y-1">
                         {userNavigation.map(item => (
-                          // TODO Change <a> to <Link>
                           <DisclosureButton
                             key={item.name}
                             as={Link}
