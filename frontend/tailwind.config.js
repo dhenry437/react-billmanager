@@ -5,4 +5,29 @@ export default {
     extend: {},
   },
   plugins: [require("@tailwindcss/forms")],
+  safelist: [
+    // For Alert.jsx
+    {
+      pattern: /bg-(green|blue|yellow|red)-50/,
+    },
+    {
+      pattern: /text-(green|blue|yellow|red)-800/,
+    },
+    {
+      pattern: /text-(green|blue|yellow|red)-700/,
+    },
+    {
+      pattern: /bg-(green|blue|yellow|red)-100/,
+      variants: ["hover"],
+    },
+    {
+      pattern: /ring-(green|blue|yellow|red)-600/,
+      variants: ["focus"],
+    },
+
+    {
+      pattern: /ring-offset-(green|blue|yellow|red)-50/,
+      variants: ["focus"],
+    },
+  ],
 };

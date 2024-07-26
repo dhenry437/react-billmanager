@@ -4,10 +4,21 @@ import {
   InformationCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/20/solid";
+import { Link } from "react-router-dom";
+
+// ? {
+// ?   type: success|info|warning|danger
+// ?   heading: String|null
+// ?   message: String|null
+// ?   list: [String]|null
+// ?   buttons: [{
+// ?     text: String
+// ?     href: String
+// ?   }]|null
+// ? }
 
 export default function Alert(props) {
   const { className, type, heading, message, list, buttons } = props;
-  // buttons: { text: "", action: f()}
 
   const renderIcon = type => {
     switch (type) {
@@ -80,9 +91,8 @@ export default function Alert(props) {
           {buttons && (
             <div className={list ? "mt-2" : "mt-4"}>
               {buttons.map((button, i) => (
-                <button
-                  type="button"
-                  onClick={button.action}
+                <Link
+                  to={button.href}
                   className={`rounded-md bg-${colour(
                     type
                   )}-50 px-2 py-1.5 text-sm font-medium text-${colour(
@@ -95,7 +105,7 @@ export default function Alert(props) {
                     type
                   )}-50`}>
                   {button.text}
-                </button>
+                </Link>
               ))}
             </div>
           )}

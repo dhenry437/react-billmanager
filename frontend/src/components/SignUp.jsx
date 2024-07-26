@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import mark from "../assets/mark.svg";
 import { useState } from "react";
+import { createUser } from "../data/repository";
+import Alert from "./Alert";
+import Spinner from "./Spinner";
 
 /*
   This example requires some changes to your config:
@@ -23,9 +26,27 @@ export default function SignUp() {
     password: "",
     confirmPassword: "",
   });
+  const [alerts, setAlerts] = useState({ form: null });
+  const [loading, setLoading] = useState({ form: false });
 
   const handleInputChange = e => {
     setFields({ ...fields, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    setLoading({ ...loading, form: true });
+    setAlerts({ ...alerts, form: null });
+
+    const response = await createUser(fields);
+    if (response.status === 200) {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+    } else {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+    }
   };
 
   return (
@@ -39,7 +60,17 @@ export default function SignUp() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form action="#" method="POST" className="space-y-6">
+          {alerts.form && (
+            <Alert
+              className="mb-6"
+              type={alerts.form.type}
+              heading={alerts.form.heading}
+              message={alerts.form.message}
+              list={alerts.form.list}
+              buttons={alerts.form.buttons}
+            />
+          )}
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="email"
@@ -50,7 +81,7 @@ export default function SignUp() {
                 <input
                   id="name"
                   name="name"
-                  type="name"
+                  type="text"
                   value={fields.name}
                   onChange={handleInputChange}
                   required
@@ -113,7 +144,7 @@ export default function SignUp() {
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="confirmPassword"
+                  type="password"
                   value={fields.confirmPassword}
                   onChange={handleInputChange}
                   required
@@ -126,8 +157,15 @@ export default function SignUp() {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Sign up
+                className="flex items-center w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                {loading.form ? (
+                  <>
+                    <Spinner />
+                    Loading...
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </button>
             </div>
           </form>
