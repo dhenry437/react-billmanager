@@ -21,7 +21,7 @@ const createUserInDb = async user => {
 // }
 const getUsersFromDb = async search => {
   const users = await User.findAll({
-    attributes: ["name", "email"],
+    attributes: ["id", "name", "email"],
     where: search,
   });
 

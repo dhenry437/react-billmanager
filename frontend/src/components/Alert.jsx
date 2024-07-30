@@ -5,6 +5,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/20/solid";
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 
 // ? {
 // ?   type: success|info|warning|danger
@@ -92,6 +93,7 @@ export default function Alert(props) {
             <div className={list ? "mt-2" : "mt-4"}>
               {buttons.map((button, i) => (
                 <Link
+                  key={i}
                   to={button.href}
                   className={`rounded-md bg-${colour(
                     type
@@ -114,3 +116,11 @@ export default function Alert(props) {
     </div>
   );
 }
+Alert.propTypes = {
+  className: PropTypes.string,
+  type: PropTypes.string.isRequired,
+  heading: PropTypes.string,
+  message: PropTypes.string,
+  list: PropTypes.array,
+  buttons: PropTypes.array,
+};

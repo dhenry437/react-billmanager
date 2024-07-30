@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import {
   Disclosure,
   DisclosureButton,
@@ -12,25 +12,23 @@ import {
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Outlet, Link, useMatch } from "react-router-dom";
 import mark from "../assets/mark.svg";
+import AuthContext from "../hooks/AuthContext";
+import Jdenticon from "react-jdenticon";
 
 export default function Navbar() {
-  const user = null;
-  // const user = {
-  //   name: "Tom Cook",
-  //   email: "tom@example.com",
-  //   imageUrl:
-  //     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  // };
+  const { user, signOutUser } = useContext(AuthContext);
+
   const navigation = [
     { name: "Dashboard", href: "/dashboard", current: useMatch("/dashboard") },
     { name: "Bills", href: "/bills", current: useMatch("/bills") },
     { name: "Paydays", href: "/paydays", current: useMatch("/paydays") },
   ];
-  const userNavigation = [{ name: "Sign out", href: "#" }];
+  const userNavigation = [{ name: "Sign out", action: signOutUser }];
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");
   };
+
   return (
     <>
       <div className="min-h-full">
@@ -69,11 +67,9 @@ export default function Navbar() {
                         <div>
                           <MenuButton className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                             <span className="sr-only">Open user menu</span>
-                            <img
-                              className="h-8 w-8 rounded-full"
-                              src={user.imageUrl}
-                              alt=""
-                            />
+                            <div className="h-8 w-8 rounded-full">
+                              <Jdenticon value={user.email} />
+                            </div>
                           </MenuButton>
                         </div>
                         <Transition
@@ -87,16 +83,29 @@ export default function Navbar() {
                           <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                             {userNavigation.map(item => (
                               <MenuItem key={item.name}>
-                                {({ focus }) => (
-                                  <Link
-                                    to={item.href}
-                                    className={classNames(
-                                      focus ? "bg-gray-100" : "",
-                                      "block px-4 py-2 text-sm text-gray-700"
-                                    )}>
-                                    {item.name}
-                                  </Link>
-                                )}
+                                {({ focus }) => {
+                                  return Object.keys(item).find(
+                                    x => x === "action"
+                                  ) ? (
+                                    <button
+                                      className={classNames(
+                                        focus ? "bg-gray-100" : "",
+                                        "w-full text-left block px-4 py-2 text-sm text-gray-700"
+                                      )}
+                                      onClick={item.action}>
+                                      {item.name}
+                                    </button>
+                                  ) : (
+                                    <Link
+                                      to={item.href}
+                                      className={classNames(
+                                        focus ? "bg-gray-100" : "",
+                                        "block px-4 py-2 text-sm text-gray-700"
+                                      )}>
+                                      {item.name}
+                                    </Link>
+                                  );
+                                }}
                               </MenuItem>
                             ))}
                           </MenuItems>
@@ -153,11 +162,9 @@ export default function Navbar() {
                     <>
                       <div className="flex items-center px-4">
                         <div className="flex-shrink-0">
-                          <img
-                            className="h-10 w-10 rounded-full"
-                            src={user.imageUrl}
-                            alt=""
-                          />
+                          <div className="h-8 w-8 rounded-full">
+                            <Jdenticon value={user.email} />
+                          </div>
                         </div>
                         <div className="ml-3">
                           <div className="text-base font-medium text-gray-800">
@@ -169,15 +176,25 @@ export default function Navbar() {
                         </div>
                       </div>
                       <div className="mt-3 space-y-1">
-                        {userNavigation.map(item => (
-                          <DisclosureButton
-                            key={item.name}
-                            as={Link}
-                            to={item.href}
-                            className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">
-                            {item.name}
-                          </DisclosureButton>
-                        ))}
+                        {userNavigation.map(item => {
+                          return Object.keys(item).find(x => x === "action") ? (
+                            <DisclosureButton
+                              key={item.name}
+                              as="button"
+                              onClick={item.action}
+                              className="w-full text-left block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+                              {item.name}
+                            </DisclosureButton>
+                          ) : (
+                            <DisclosureButton
+                              key={item.name}
+                              as={Link}
+                              to={item.href}
+                              className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+                              {item.name}
+                            </DisclosureButton>
+                          );
+                        })}
                       </div>
                     </>
                   ) : (

@@ -1,26 +1,42 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import mark from "../assets/mark.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Spinner from "./Spinner";
+import { signIn } from "../data/repository";
+import Alert from "./Alert";
+import AuthContext from "../hooks/AuthContext";
 
-/*
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  module.exports = {
-    // ...
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-    ],
-  }
-  ```
-*/
 export default function SignIn() {
+  const { signInUser } = useContext(AuthContext);
+
+  const navigate = useNavigate();
+
   const [fields, setFields] = useState({ email: "", password: "" });
+  const [alerts, setAlerts] = useState({ form: null });
+  const [loading, setLoading] = useState({ form: false });
 
   const handleInputChange = e => {
     setFields({ ...fields, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    setLoading({ ...loading, form: true });
+    setAlerts({ ...alerts, form: null });
+
+    const response = await signIn(fields);
+    if (response.status === 200) {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+
+      signInUser(response.data.user);
+
+      navigate("/dashboard");
+    } else {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+    }
   };
 
   return (
@@ -34,7 +50,17 @@ export default function SignIn() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form action="#" method="POST" className="space-y-6">
+          {alerts.form && (
+            <Alert
+              className="mb-6"
+              type={alerts.form.type}
+              heading={alerts.form.heading}
+              message={alerts.form.message}
+              list={alerts.form.list}
+              buttons={alerts.form.buttons}
+            />
+          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="email"
@@ -89,7 +115,14 @@ export default function SignIn() {
               <button
                 type="submit"
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Sign in
+                {loading.form ? (
+                  <>
+                    <Spinner />
+                    Loading...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </button>
             </div>
           </form>

@@ -5,20 +5,6 @@ import { createUser } from "../data/repository";
 import Alert from "./Alert";
 import Spinner from "./Spinner";
 
-/*
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  module.exports = {
-    // ...
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-    ],
-  }
-  ```
-*/
 export default function SignUp() {
   const [fields, setFields] = useState({
     name: "",

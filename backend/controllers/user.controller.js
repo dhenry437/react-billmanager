@@ -1,9 +1,11 @@
 const z = require("zod");
 const { createUserInDb, getUsersFromDb } = require("../services/user.service");
 
-const createUser = async (req, res) => {
-  const user = req.body;
+const db = require("../db");
+// const Sequelize = db.Sequelize;
+const User = db.users;
 
+const createUser = async (req, res) => {
   const createUserSchema = z
     .object({
       name: z.string(),
@@ -29,11 +31,10 @@ const createUser = async (req, res) => {
       path: ["password", "confirmPassword"],
     });
 
-  const result = await createUserSchema.safeParseAsync(user);
-  console.log(result);
+  const result = await createUserSchema.safeParseAsync(req.body);
 
   if (result.success) {
-    const response = await createUserInDb(user);
+    const response = await createUserInDb(req.body);
     res.send({
       user: response,
       alert: {
@@ -60,9 +61,6 @@ const createUser = async (req, res) => {
       },
     });
   }
-
-  // Destructure required fields
-  const { name, email, password, confirmPassword } = req.body;
 };
 
 module.exports = {

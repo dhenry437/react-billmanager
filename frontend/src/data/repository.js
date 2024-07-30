@@ -7,3 +7,29 @@ export const createUser = async fields => {
 
   return response;
 };
+
+export const signIn = async fields => {
+  const response = await axios
+    .post("/auth/sign-in", fields)
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+export const signOut = async () => {
+  const response = await axios.post("/auth/sign-out").catch(function (error) {
+    return error.response;
+  });
+
+  return response;
+};
+
+export const getUser = async () => {
+  const response = await axios.get("/auth/user").catch(function (error) {
+    return error.response;
+  });
+
+  return response;
+};
