@@ -1,6 +1,5 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
@@ -83,6 +82,13 @@ export default function Dashboard() {
         )
       )?.events || null,
   }));
+
+  // Should only fire when month view changes
+  const monthAndYear = format(selectedDate, "yyyy-MM");
+  useEffect(() => {
+    console.log("useEffect() in Dashboard");
+    console.log(`monthAndYear = ${monthAndYear}`);
+  }, [monthAndYear]);
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");
