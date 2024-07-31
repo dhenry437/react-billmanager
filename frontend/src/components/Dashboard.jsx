@@ -116,7 +116,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="mx-auto p-4 sm:p-6 lg:p-8">
+    <div>
       <div className="bg-gray-50 border border-gray-200 lg:h-0 lg:min-h-[742px] rounded-md">
         <div className="lg:flex lg:h-full lg:flex-col">
           <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4 lg:flex-none">

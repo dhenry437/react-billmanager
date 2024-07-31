@@ -11,6 +11,7 @@ import Landing from "./components/Landing";
 import { PrivateRoutes } from "./components/PrivateRoutes";
 import { useContext } from "react";
 import AuthContext from "./hooks/AuthContext";
+import { EventForm } from "./components/EventForm";
 
 function App() {
   const { loading } = useContext(AuthContext);
@@ -24,6 +25,7 @@ function App() {
         <Route element={<PrivateRoutes />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="bills" element={<Bills />} />
+          <Route path="bills/new" element={<EventForm />} />
           <Route path="paydays" element={<Paydays />} />
         </Route>
         <Route path="sign-in" element={<SignIn />} />

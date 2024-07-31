@@ -211,7 +211,9 @@ export default function Navbar() {
         </Disclosure>
       </div>
 
-      <Outlet />
+      <div className="mx-auto p-4 sm:p-6 lg:p-8">
+        <Outlet />
+      </div>
     </>
   );
 }
