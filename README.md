@@ -16,3 +16,6 @@ React.js and Express.js
   - Never
   - On a date
   - Number of occurrences
+
+![Mockup](./README_assets/9x2OSWee3b.png)
+[Link](https://app.moqups.com/EYrXVAn6iVlY6YI0rwkRGkilM9Q3X9ma/edit/page/ad64222d5)
