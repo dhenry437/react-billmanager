@@ -85,10 +85,7 @@ export default function Dashboard() {
 
   // Should only fire when month view changes
   const monthAndYear = format(selectedDate, "yyyy-MM");
-  useEffect(() => {
-    console.log("useEffect() in Dashboard");
-    console.log(`monthAndYear = ${monthAndYear}`);
-  }, [monthAndYear]);
+  useEffect(() => {}, [monthAndYear]);
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");
@@ -156,16 +153,16 @@ export default function Dashboard() {
               <div className="hidden  md:flex md:items-center">
                 {/* Vertical divider */}
                 <div className="h-6 w-px bg-gray-300" />
-                <button
-                  type="button"
+                <Link
+                  to="/bills/add"
                   className="ml-6 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                   Add bill
-                </button>
-                <button
-                  type="button"
+                </Link>
+                <Link
+                  to="/paydays/add"
                   className="ml-4 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                   Add payday
-                </button>
+                </Link>
               </div>
               <Menu as="div" className="relative ml-6 md:hidden">
                 {/* Vertical divider */}

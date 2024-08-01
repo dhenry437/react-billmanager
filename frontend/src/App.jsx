@@ -25,8 +25,9 @@ function App() {
         <Route element={<PrivateRoutes />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="bills" element={<Bills />} />
-          <Route path="bills/new" element={<EventForm />} />
+          <Route path="bills/add" element={<EventForm />} />
           <Route path="paydays" element={<Paydays />} />
+          <Route path="paydays/add" element={<EventForm />} />
         </Route>
         <Route path="sign-in" element={<SignIn />} />
         <Route path="sign-up" element={<SignUp />} />

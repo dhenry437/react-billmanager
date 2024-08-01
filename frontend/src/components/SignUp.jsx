@@ -158,10 +158,25 @@ export default function SignUp() {
                   "Sign up"
                 )}
               </button>
+              <p className="mt-2 text-gray-400 text-xs text-center">
+                This site is protected by reCAPTCHA and the Google{" "}
+                <a
+                  className="text-indigo-600 hover:text-indigo-500"
+                  href="https://policies.google.com/privacy">
+                  Privacy Policy
+                </a>{" "}
+                and{" "}
+                <a
+                  className="text-indigo-600 hover:text-indigo-500"
+                  href="https://policies.google.com/terms">
+                  Terms of Service
+                </a>{" "}
+                apply.
+              </p>
             </div>
           </form>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
+          <p className="mt-8 text-center text-sm text-gray-500">
             Already a member?{" "}
             <Link
               to="/sign-in"
