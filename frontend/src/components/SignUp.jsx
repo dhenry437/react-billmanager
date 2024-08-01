@@ -4,8 +4,11 @@ import { useState } from "react";
 import { createUser } from "../data/repository";
 import Alert from "./Alert";
 import Spinner from "./Spinner";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function SignUp() {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
   const [fields, setFields] = useState({
     name: "",
     email: "",
@@ -22,10 +25,12 @@ export default function SignUp() {
   const handleSubmit = async e => {
     e.preventDefault();
 
+    const token = await executeRecaptcha("sign_up");
+
     setLoading({ ...loading, form: true });
     setAlerts({ ...alerts, form: null });
 
-    const response = await createUser(fields);
+    const response = await createUser({ ...fields, token });
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });

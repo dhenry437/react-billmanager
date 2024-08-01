@@ -1,4 +1,18 @@
 var passport = require("passport");
+const axios = require("axios");
+
+const verifyReCaptcha = async token => {
+  // Verify reCaptcha
+  let requestBody = `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`;
+
+  const reCaptchaResponse = await axios
+    .post("https://www.google.com/recaptcha/api/siteverify", requestBody)
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return reCaptchaResponse.data.success;
+};
 
 const getAuthenticatedUser = (req, res) => {
   res.send({ user: req.user });
@@ -59,4 +73,5 @@ module.exports = {
   getAuthenticatedUser,
   signInPassport,
   signOutPassport,
+  verifyReCaptcha,
 };
