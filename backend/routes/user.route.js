@@ -4,12 +4,12 @@ const router = express.Router();
 const { createUser } = require("../controllers/user.controller");
 
 // Create new user
-router.post("/users", createUser);
+router.post("", createUser);
 
 // Edit a user
-// router.put("/users/:id");
+// router.put("/:id");
 
 // Delete a user
-// router.delete("/users/:id");
+// router.delete("/:id");
 
 module.exports = router;
