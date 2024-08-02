@@ -1,14 +1,19 @@
-// import PropTypes from "prop-types";
-
 import { useEffect, useState } from "react";
 import Select from "./ui/Select";
 import WeekdayBubbles from "./ui/WeekdayBubbles";
 import { format, isAfter } from "date-fns";
 import { titleCase } from "../util";
+import { createEvent } from "../data/repository";
+import Spinner from "./Spinner";
+import { useNavigate } from "react-router-dom";
 
 export const EventForm = () => {
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
 
+  const navigate = useNavigate();
+
+  const [alerts, setAlerts] = useState({ form: null });
+  const [loading, setLoading] = useState({ form: false });
   const [fields, setFields] = useState({
     name: "",
     amount: "0",
@@ -50,6 +55,24 @@ export const EventForm = () => {
     setFields({ ...fields, [e.target.name]: e.target.checked });
   };
 
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    setLoading({ ...loading, form: true });
+    setAlerts({ ...alerts, form: null });
+
+    const response = await createEvent({ ...fields, type: eventType });
+    if (response.status === 200) {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+
+      navigate(`/${eventType}s`);
+    } else {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+    }
+  };
+
   return (
     <div className="mx-auto max-w-lg">
       <header>
@@ -57,7 +80,7 @@ export const EventForm = () => {
           Add a new {eventType}
         </h1>
       </header>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div className="mt-6 grid  gap-x-6 gap-y-6 grid-cols-6">
           <div className="col-span-full">
             <label
@@ -364,6 +387,20 @@ export const EventForm = () => {
                   </div>
                 </fieldset>
               </div>
+              <div className="col-span-full">
+                <button
+                  type="submit"
+                  className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                  {loading.form ? (
+                    <>
+                      <Spinner />
+                      Loading...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -371,5 +408,3 @@ export const EventForm = () => {
     </div>
   );
 };
-
-EventForm.propTypes = {};

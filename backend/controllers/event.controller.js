@@ -6,8 +6,8 @@ const { verifyReCaptcha } = require("./auth.controller");
 // const Sequelize = db.Sequelize;
 const User = db.users;
 
-const createUser = async (req, res) => {
-  const createUserSchema = z
+const createEvent = async (req, res) => {
+  const createEventSchema = z
     .object({
       name: z.string(),
       email: z
@@ -33,11 +33,11 @@ const createUser = async (req, res) => {
       path: ["password", "confirmPassword"],
     });
 
-  const result = await createUserSchema.safeParseAsync(req.body);
+  const result = await createEventSchema.safeParseAsync(req.body);
 
   if (result.success) {
     if (await verifyReCaptcha(req.body.token)) {
-      const response = await createUserInDb(req.body);
+      const response = await createEventInDb(req.body);
       res.send({
         user: response,
         alert: {
@@ -75,5 +75,5 @@ const createUser = async (req, res) => {
 };
 
 module.exports = {
-  createUser,
+  createEvent,
 };

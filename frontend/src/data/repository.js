@@ -33,3 +33,11 @@ export const getUser = async () => {
 
   return response;
 };
+
+export const createEvent = async fields => {
+  const response = await axios.post("/events", fields).catch(function (error) {
+    return error.response;
+  });
+
+  return response;
+};
