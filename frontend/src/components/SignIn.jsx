@@ -5,10 +5,12 @@ import Spinner from "./Spinner";
 import { signIn } from "../data/repository";
 import Alert from "./Alert";
 import AuthContext from "../hooks/AuthContext";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function SignIn() {
   const { signInUser } = useContext(AuthContext);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const navigate = useNavigate();
 
   const [fields, setFields] = useState({ email: "", password: "" });
@@ -22,10 +24,12 @@ export default function SignIn() {
   const handleSubmit = async e => {
     e.preventDefault();
 
+    const token = await executeRecaptcha("sign_in");
+
     setLoading({ ...loading, form: true });
     setAlerts({ ...alerts, form: null });
 
-    const response = await signIn(fields);
+    const response = await signIn({ ...fields, token });
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });

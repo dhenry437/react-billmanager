@@ -1,11 +1,6 @@
 const z = require("zod");
 const { createUserInDb, getUsersFromDb } = require("../services/user.service");
 
-const db = require("../db");
-const { verifyReCaptcha } = require("./auth.controller");
-// const Sequelize = db.Sequelize;
-const User = db.users;
-
 const createUser = async (req, res) => {
   const createUserSchema = z
     .object({
@@ -36,7 +31,7 @@ const createUser = async (req, res) => {
   const result = await createUserSchema.safeParseAsync(req.body);
 
   if (result.success) {
-    if (await verifyReCaptcha(req.body.token)) {
+    try {
       const response = await createUserInDb(req.body);
       res.send({
         user: response,
@@ -51,11 +46,13 @@ const createUser = async (req, res) => {
           ],
         },
       });
-    } else {
-      res.status(400).send({
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({
         alert: {
           type: "danger",
-          message: "Invalid reCaptcha",
+          heading: "DB error",
+          message: "Check Node logs",
         },
       });
     }

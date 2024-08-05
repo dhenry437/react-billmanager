@@ -1,61 +1,130 @@
 const z = require("zod");
-const { createUserInDb, getUsersFromDb } = require("../services/user.service");
 
-const db = require("../db");
-const { verifyReCaptcha } = require("./auth.controller");
-// const Sequelize = db.Sequelize;
-const User = db.users;
+const {
+  createRRule,
+  createEventInDb,
+  getEventsByUserFromDb,
+} = require("../services/event.service");
+const { titleCase } = require("../util");
 
 const createEvent = async (req, res) => {
-  const createEventSchema = z
-    .object({
-      name: z.string(),
-      email: z
-        .string()
-        .email()
-        .refine(
-          // Check if email is in use
-          async data => {
-            console.log(`data = ${data}`);
-            const users = await getUsersFromDb({ email: data });
-            console.log(`users.length = ${users.length}`);
+  const weekdaySchema = z.enum([
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+  ]);
+  const recurringEndsSchema = z.enum(["never", "on", "after"]);
+  const recurringFrequencySchema = z.enum(["days", "weeks", "months", "years"]);
+  const recurringMonthlySchema = z.enum(["nth", "date"]);
+  const typeSchema = z.enum(["bill", "payday"]);
 
-            return users.length === 0;
-          },
-          { message: "Email is in use", path: ["email"] }
-        ),
-      password: z.string(),
-      confirmPassword: z.string(),
-      token: z.string(),
-    })
-    .refine(data => data.password === data.confirmPassword, {
-      message: "Passwords don't match",
-      path: ["password", "confirmPassword"],
-    });
+  const createEventSchema = z.object({
+    amount: z.coerce.number().gt(0),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    description: z.string().optional(),
+    name: z.string(),
+    recurring: z.boolean(),
+    recurringDays: z.array(
+      z.object({
+        name: weekdaySchema,
+        selected: z.boolean(),
+      })
+    ),
+    recurringEnds: recurringEndsSchema,
+    recurringEndsAfterN: z.coerce.number().gt(0),
+    recurringEndsOnDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    recurringFrequency: recurringFrequencySchema,
+    recurringMonthly: recurringMonthlySchema,
+    recurringN: z.coerce.number().gt(0),
+    type: typeSchema,
+  });
 
   const result = await createEventSchema.safeParseAsync(req.body);
 
+  const {
+    amount,
+    date,
+    description,
+    name,
+    recurring,
+    recurringDays,
+    recurringEnds,
+    recurringEndsAfterN,
+    recurringEndsOnDate,
+    recurringFrequency,
+    recurringMonthly,
+    recurringN,
+    type,
+  } = req.body;
+
   if (result.success) {
-    if (await verifyReCaptcha(req.body.token)) {
-      const response = await createEventInDb(req.body);
-      res.send({
-        user: response,
+    let rule = null;
+    if (recurring) {
+      try {
+        rule = createRRule(req.body);
+        console.log(rule.toString());
+        console.log(rule.toText());
+      } catch (e) {
+        console.log(e);
+        return res.status(500).send({
+          alert: {
+            type: "danger",
+            heading: "RRule error",
+            message: "Check Node logs",
+          },
+        });
+      }
+    }
+
+    try {
+      const response = await createEventInDb({
+        amount,
+        name,
+        date,
+        description,
+        type,
+        rruleString: rule.toString(),
+        userId: req.user.id,
+        reactState: {
+          amount,
+          date,
+          description,
+          name,
+          recurring,
+          recurringDays,
+          recurringEnds,
+          recurringEndsAfterN,
+          recurringEndsOnDate,
+          recurringFrequency,
+          recurringMonthly,
+          recurringN,
+        },
+      });
+
+      return res.send({
+        event: response,
         alert: {
           type: "success",
-          message: "Account created",
+          message: `${titleCase(type)} created`,
           buttons: [
             {
-              text: "Sign in",
-              href: "/sign-in",
+              text: req.body.type,
+              href: `/${req.body.type}`,
             },
           ],
         },
       });
-    } else {
-      res.status(400).send({
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({
         alert: {
           type: "danger",
-          message: "Invalid reCaptcha",
+          heading: "DB error",
+          message: "Check Node logs",
         },
       });
     }
@@ -64,7 +133,7 @@ const createEvent = async (req, res) => {
       error: { issues },
     } = result;
 
-    res.status(400).send({
+    return res.status(400).send({
       alert: {
         type: "danger",
         message: "Please address the following:",
@@ -74,6 +143,26 @@ const createEvent = async (req, res) => {
   }
 };
 
+const getEventsByUser = (req, res) => {
+  try {
+    const events = getEventsByUserFromDb(req.user.id);
+
+    return res.send({
+      events,
+    });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).send({
+      alert: {
+        type: "danger",
+        heading: "DB error",
+        message: "Check Node logs",
+      },
+    });
+  }
+};
+
 module.exports = {
   createEvent,
+  getEventsByUser,
 };
