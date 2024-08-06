@@ -6,6 +6,7 @@ const {
   getEventsByUserFromDb,
 } = require("../services/event.service");
 const { titleCase } = require("../util");
+const { RRule } = require("rrule");
 
 const createEvent = async (req, res) => {
   const weekdaySchema = z.enum([
@@ -112,8 +113,8 @@ const createEvent = async (req, res) => {
           message: `${titleCase(type)} created`,
           buttons: [
             {
-              text: req.body.type,
-              href: `/${req.body.type}`,
+              text: `View all ${req.body.type}s`,
+              href: `/${req.body.type}s`,
             },
           ],
         },
@@ -143,12 +144,23 @@ const createEvent = async (req, res) => {
   }
 };
 
-const getEventsByUser = (req, res) => {
+const getEventsCurrentUser = async (req, res) => {
   try {
-    const events = getEventsByUserFromDb(req.user.id);
+    const { type } = req.query;
+    console.log(type);
+    if (type) {
+      if (type !== "bill" && type !== "payday") {
+        return res.status(400).send("Invalid type");
+      }
+    }
+
+    const events = await getEventsByUserFromDb(req.user.id, type);
 
     return res.send({
-      events,
+      events: events.map(x => ({
+        ...x,
+        recurring: RRule.fromString(x.rruleString).toText(),
+      })),
     });
   } catch (e) {
     console.log(e);
@@ -164,5 +176,5 @@ const getEventsByUser = (req, res) => {
 
 module.exports = {
   createEvent,
-  getEventsByUser,
+  getEventsCurrentUser,
 };

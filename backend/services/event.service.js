@@ -78,8 +78,12 @@ const createEventInDb = async event => {
   return await Event.create(event);
 };
 
-const getEventsByUserFromDb = async userId => {
-  return await Event.findAll({ where: { userId } });
+const getEventsByUserFromDb = async (userId, type) => {
+  return await Event.findAll({
+    where: { userId, ...(type && { type }) },
+    attributes: ["id", "name", "description", "amount", "rruleString"],
+    raw: true,
+  });
 };
 
 module.exports = {

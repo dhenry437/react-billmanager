@@ -6,6 +6,7 @@ import { getOrdinalWeekdayOfMonth, titleCase } from "../util";
 import { createEvent } from "../data/repository";
 import Spinner from "./Spinner";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import Alert from "./Alert";
 
 export const EventForm = () => {
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
@@ -66,9 +67,27 @@ export const EventForm = () => {
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });
+
+      if (response.data.alert) {
+        // Scroll to top to show alert
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
     } else {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });
+
+      if (response.data.alert) {
+        // Scroll to top to show alert
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
     }
   };
 
@@ -79,6 +98,16 @@ export const EventForm = () => {
           Add a new {eventType}
         </h1>
       </header>
+      {alerts.form && (
+        <Alert
+          className="my-6"
+          type={alerts.form.type}
+          heading={alerts.form.heading}
+          message={alerts.form.message}
+          list={alerts.form.list}
+          buttons={alerts.form.buttons}
+        />
+      )}
       <form onSubmit={handleSubmit}>
         <div className="mt-6 grid  gap-x-6 gap-y-6 grid-cols-6">
           <div className="col-span-full">

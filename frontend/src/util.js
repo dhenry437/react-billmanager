@@ -8,6 +8,10 @@ export const titleCase = str => {
   return str.join(" ");
 };
 
+export const sentenceCase = str => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 export const ordinalSuffix = i => {
   let j = i % 10,
     k = i % 100;

@@ -41,3 +41,13 @@ export const createEvent = async fields => {
 
   return response;
 };
+
+export const getEventsCurrentUser = async type => {
+  const response = await axios
+    .get("/events", { params: { type: type } })
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};

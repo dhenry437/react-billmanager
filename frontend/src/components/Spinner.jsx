@@ -2,11 +2,15 @@ import PropTypes from "prop-types";
 
 export default function Spinner(props) {
   const { className } = props;
+  let { size } = props;
+
+  // Default size of 5
+  if (!size) size = 5;
 
   return (
     <div className={className ? className : ""}>
       <svg
-        className="animate-spin -ml-1 mr-3 h-5 w-5"
+        className={`animate-spin -ml-1 mr-3 h-${size} w-${size}`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24">
@@ -28,4 +32,5 @@ export default function Spinner(props) {
 
 Spinner.propTypes = {
   className: PropTypes.string,
+  size: PropTypes.number,
 };
