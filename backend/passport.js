@@ -39,7 +39,9 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-  User.findByPk(id, { attributes: ["name", "email"] }).then(function (user) {
+  User.findByPk(id, { attributes: ["id", "name", "email"] }).then(function (
+    user
+  ) {
     done(null, user);
   });
 });

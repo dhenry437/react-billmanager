@@ -33,3 +33,21 @@ export const getUser = async () => {
 
   return response;
 };
+
+export const createEvent = async fields => {
+  const response = await axios.post("/events", fields).catch(function (error) {
+    return error.response;
+  });
+
+  return response;
+};
+
+export const getEventsCurrentUser = async type => {
+  const response = await axios
+    .get("/events", { params: { type: type } })
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};

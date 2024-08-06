@@ -1,14 +1,20 @@
-// import PropTypes from "prop-types";
-
 import { useEffect, useState } from "react";
 import Select from "./ui/Select";
 import WeekdayBubbles from "./ui/WeekdayBubbles";
 import { format, isAfter } from "date-fns";
-import { titleCase } from "../util";
+import { getOrdinalWeekdayOfMonth, titleCase } from "../util";
+import { createEvent } from "../data/repository";
+import Spinner from "./Spinner";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import Alert from "./Alert";
 
 export const EventForm = () => {
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const [alerts, setAlerts] = useState({ form: null });
+  const [loading, setLoading] = useState({ form: false });
   const [fields, setFields] = useState({
     name: "",
     amount: "0",
@@ -22,12 +28,11 @@ export const EventForm = () => {
       { name: "mon", selected: false },
       { name: "tue", selected: false },
       { name: "wed", selected: false },
-      { name: "thur", selected: false },
+      { name: "thu", selected: false },
       { name: "fri", selected: false },
       { name: "sat", selected: false },
     ],
     recurringMonthly: "nth",
-    recurringMonthlyNth: "2nd",
     recurringEnds: "never",
     recurringEndsOnDate: format(new Date(), "yyyy-MM-dd"),
     recurringEndsAfterN: "5",
@@ -50,6 +55,42 @@ export const EventForm = () => {
     setFields({ ...fields, [e.target.name]: e.target.checked });
   };
 
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    const token = await executeRecaptcha("create_event");
+
+    setLoading({ ...loading, form: true });
+    setAlerts({ ...alerts, form: null });
+
+    const response = await createEvent({ ...fields, type: eventType, token });
+    if (response.status === 200) {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+
+      if (response.data.alert) {
+        // Scroll to top to show alert
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
+    } else {
+      setLoading({ ...loading, form: false });
+      setAlerts({ ...alerts, form: response.data.alert });
+
+      if (response.data.alert) {
+        // Scroll to top to show alert
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
+
   return (
     <div className="mx-auto max-w-lg">
       <header>
@@ -57,7 +98,17 @@ export const EventForm = () => {
           Add a new {eventType}
         </h1>
       </header>
-      <form>
+      {alerts.form && (
+        <Alert
+          className="my-6"
+          type={alerts.form.type}
+          heading={alerts.form.heading}
+          message={alerts.form.message}
+          list={alerts.form.list}
+          buttons={alerts.form.buttons}
+        />
+      )}
+      <form onSubmit={handleSubmit}>
         <div className="mt-6 grid  gap-x-6 gap-y-6 grid-cols-6">
           <div className="col-span-full">
             <label
@@ -74,6 +125,7 @@ export const EventForm = () => {
                 type="text"
                 autoComplete="off"
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                required
               />
             </div>
           </div>
@@ -97,6 +149,8 @@ export const EventForm = () => {
                 min={0}
                 className="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 placeholder="0.00"
+                step={0.01}
+                required
               />
             </div>
           </div>
@@ -134,6 +188,7 @@ export const EventForm = () => {
                 type="date"
                 autoComplete="off"
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                required
               />
             </div>
           </div>
@@ -179,6 +234,7 @@ export const EventForm = () => {
                   min={1}
                   autoComplete="off"
                   className="block w-full rounded-md border-0 py-1.5 pr-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  required
                 />
               </div>
               <div className="col-span-4">
@@ -207,7 +263,7 @@ export const EventForm = () => {
                   <fieldset>
                     <legend className="sr-only">Recurring Frequency</legend>
                     <div className="space-y-5">
-                      <div className="relative flex items-center">
+                      <div className="relative flex items-start">
                         <div className="flex h-6 items-center">
                           <input
                             id="recurringMonthly"
@@ -223,16 +279,11 @@ export const EventForm = () => {
                           <label
                             htmlFor="recurringMonthly"
                             className="flex items-center font-medium text-gray-900">
-                            Monthly on the
-                            <Select
-                              className="mx-2"
-                              options={["1st", "2nd", "3rd", "last"]}
-                              selected={fields.recurringMonthlyNth}
-                              setSelected={x =>
-                                setFields({ ...fields, recurringMonthlyNth: x })
-                              }
-                            />
-                            {format(fields.date, "EEEE")}
+                            Monthly on the{" "}
+                            {`${getOrdinalWeekdayOfMonth(fields.date)} ${format(
+                              fields.date,
+                              "EEEE"
+                            )}`}
                           </label>
                         </div>
                       </div>
@@ -319,6 +370,7 @@ export const EventForm = () => {
                           min={format(fields.date, "yyyy-MM-dd")}
                           autoComplete="off"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          required={fields.recurringEnds === "on"}
                         />
                       </div>
                     </div>
@@ -349,6 +401,7 @@ export const EventForm = () => {
                             onChange={handleInputChange}
                             min={1}
                             className="block w-full rounded-md border-0 py-1.5 sm:pr-[98px] text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            required={fields.recurringEnds === "after"}
                           />
                           <div className="hidden sm:flex pointer-events-none absolute inset-y-0 right-0 items-center pr-3">
                             <span className="text-gray-500 text-sm">
@@ -364,6 +417,20 @@ export const EventForm = () => {
                   </div>
                 </fieldset>
               </div>
+              <div className="col-span-full">
+                <button
+                  type="submit"
+                  className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                  {loading.form ? (
+                    <>
+                      <Spinner />
+                      Loading...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -371,5 +438,3 @@ export const EventForm = () => {
     </div>
   );
 };
-
-EventForm.propTypes = {};
