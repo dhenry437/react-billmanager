@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { sentenceCase, titleCase } from "../util";
 import Spinner from "./Spinner";
 import { useCallback, useEffect, useState } from "react";
-import { getEventsCurrentUser } from "../data/repository";
+import { deleteEventById, getEventsCurrentUser } from "../data/repository";
 import Alert from "./Alert";
 
 export default function EventList() {
   const [tableData, setTableData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState(null);
 
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
 
@@ -17,12 +18,51 @@ export default function EventList() {
     if (response.status === 200) {
       setTableData(response.data.events);
     }
+
+    setLoading(false);
   }, [eventType]);
 
   useEffect(() => {
+    setLoading(true);
+    setTableData(null);
     fetchEventsCallback();
-    setLoading(false);
   }, [fetchEventsCallback]);
+
+  const handleClickDelete = async (id, name) => {
+    if (window.confirm(`Confirm delete ${eventType} "${name}"`)) {
+      setAlert(null);
+
+      const response = await deleteEventById(id);
+
+      if (response.status === 200) {
+        setAlert(response.data.alert);
+
+        if (response.data.alert) {
+          // Scroll to top to show alert
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+
+        setLoading(true);
+        setTableData(null);
+        fetchEventsCallback();
+      } else {
+        setAlert(response.data.alert);
+
+        if (response.data.alert) {
+          // Scroll to top to show alert
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
+  };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
@@ -43,6 +83,16 @@ export default function EventList() {
           </Link>
         </div>
       </div>
+      {alert && (
+        <Alert
+          className="mx-6 mt-6"
+          type={alert.type}
+          heading={alert.heading}
+          message={alert.message}
+          list={alert.list}
+          buttons={alert.buttons}
+        />
+      )}
       {loading ? (
         <div className="flex justify-center mt-6 text-indigo-600">
           <div>
@@ -104,12 +154,17 @@ export default function EventList() {
                   <td className="px-3 py-4 text-sm text-gray-500">
                     {sentenceCase(row.recurring)}
                   </td>
-                  <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                  <td className="flex flex-col py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                     <Link
-                      to={`/paydays/${row.id}`}
+                      to={`/${eventType}s/${row.id}`}
                       className="text-indigo-600 hover:text-indigo-900">
                       Edit<span className="sr-only">, {row.name}</span>
                     </Link>
+                    <button
+                      onClick={() => handleClickDelete(row.id, row.name)}
+                      className="text-right text-red-700 hover:text-red-900">
+                      Delete<span className="sr-only">, {row.name}</span>
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -5,6 +5,7 @@ const Event = db.events;
 const { datetime, RRule, RRuleSet, rrulestr } = require("rrule");
 const { getDate, format } = require("date-fns");
 const { getOrdinalOfMonth } = require("../util");
+const { where } = require("sequelize");
 
 const freqDictionary = {
   days: RRule.DAILY,
@@ -78,16 +79,47 @@ const createEventInDb = async event => {
   return await Event.create(event);
 };
 
-const getEventsByUserFromDb = async (userId, type) => {
+const updateEventInDb = async (id, userId, fields) => {
+  const event = await Event.findOne({ where: { id, userId } });
+
+  if (!event) {
+    console.log(`--\nERROR: User ${userId} tried to update event ${id}\n--`);
+  }
+
+  return await event.update(fields);
+};
+
+const getEventsFromDb = async (userId, search) => {
   return await Event.findAll({
-    where: { userId, ...(type && { type }) },
-    attributes: ["id", "name", "description", "amount", "rruleString"],
+    where: { userId, ...(search && search) },
+    attributes: [
+      "id",
+      "name",
+      "description",
+      "amount",
+      "rruleString",
+      "reactState",
+    ],
     raw: true,
   });
+};
+
+const deleteEventFromDb = async (id, userId) => {
+  const event = await Event.findOne({ where: { id, userId } });
+
+  if (!event) {
+    console.log(`--\nERROR: User ${userId} tried to delete event ${id}\n--`);
+  }
+
+  await event.destroy();
+
+  return event;
 };
 
 module.exports = {
   createRRule,
   createEventInDb,
-  getEventsByUserFromDb,
+  updateEventInDb,
+  getEventsFromDb,
+  deleteEventFromDb,
 };
