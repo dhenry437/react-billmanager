@@ -17,11 +17,14 @@ export default function EventList() {
     if (response.status === 200) {
       setTableData(response.data.events);
     }
+
+    setLoading(false);
   }, [eventType]);
 
   useEffect(() => {
+    setLoading(true);
+    setTableData(null);
     fetchEventsCallback();
-    setLoading(false);
   }, [fetchEventsCallback]);
 
   return (
@@ -106,7 +109,7 @@ export default function EventList() {
                   </td>
                   <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                     <Link
-                      to={`/paydays/${row.id}`}
+                      to={`/${eventType}s/${row.id}`}
                       className="text-indigo-600 hover:text-indigo-900">
                       Edit<span className="sr-only">, {row.name}</span>
                     </Link>

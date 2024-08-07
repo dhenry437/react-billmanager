@@ -23,10 +23,12 @@ function App() {
         <Route path="" element={<Landing />} />
         <Route element={<PrivateRoutes />}>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="paydays" element={<EventList />} />
           <Route path="bills" element={<EventList />} />
           <Route path="bills/add" element={<EventForm />} />
-          <Route path="paydays" element={<EventList />} />
+          <Route path="bills/:eventId" element={<EventForm />} />
           <Route path="paydays/add" element={<EventForm />} />
+          <Route path="paydays/:eventId" element={<EventForm />} />
         </Route>
         <Route path="sign-in" element={<SignIn />} />
         <Route path="sign-up" element={<SignUp />} />

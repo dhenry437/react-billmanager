@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Select from "./ui/Select";
 import WeekdayBubbles from "./ui/WeekdayBubbles";
 import { format, isAfter } from "date-fns";
 import { getOrdinalWeekdayOfMonth, titleCase } from "../util";
-import { createEvent } from "../data/repository";
+import { createEvent, getEventById, updateEvent } from "../data/repository";
 import Spinner from "./Spinner";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Alert from "./Alert";
+import { useNavigate, useParams } from "react-router-dom";
 
 export const EventForm = () => {
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
+
+  const { eventId } = useParams();
+  const navigate = useNavigate();
 
   const { executeRecaptcha } = useGoogleReCaptcha();
 
@@ -38,6 +42,24 @@ export const EventForm = () => {
     recurringEndsAfterN: "5",
   });
 
+  const fetchEventCallback = useCallback(
+    async eventId => {
+      const response = await getEventById(eventId);
+
+      if (response.status === 200) {
+        setFields(response.data.events[0].reactState);
+      } else {
+        navigate(`/${eventType}s`);
+      }
+    },
+    [eventType, navigate]
+  );
+
+  // If on an edit page, fetch event and load into state
+  useEffect(() => {
+    if (eventId) fetchEventCallback(eventId);
+  }, [fetchEventCallback, eventId]);
+
   // When date is changed, update end date if it is before date
   useEffect(() => {
     setFields(fields =>
@@ -63,7 +85,9 @@ export const EventForm = () => {
     setLoading({ ...loading, form: true });
     setAlerts({ ...alerts, form: null });
 
-    const response = await createEvent({ ...fields, type: eventType, token });
+    const response = eventId
+      ? await updateEvent(eventId, { ...fields, type: eventType })
+      : await createEvent({ ...fields, type: eventType });
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });
@@ -95,7 +119,7 @@ export const EventForm = () => {
     <div className="mx-auto max-w-lg">
       <header>
         <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-          Add a new {eventType}
+          {eventId ? `Edit ${eventType}` : `Add a new ${eventType}`}
         </h1>
       </header>
       {alerts.form && (

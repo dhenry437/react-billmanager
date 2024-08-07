@@ -2,19 +2,19 @@ const express = require("express");
 const {
   createEvent,
   getEventsCurrentUser,
+  updateEvent,
 } = require("../controllers/event.controller");
-const { verifyReCaptcha } = require("../middleware/recaptcha.middleware");
 const { ensureAuthenticated } = require("../middleware/auth.middleware");
 const router = express.Router();
 
 // Create new event
-router.post("", ensureAuthenticated, verifyReCaptcha, createEvent);
+router.post("", ensureAuthenticated, createEvent);
 
 // Get events for current user
 router.get("", ensureAuthenticated, getEventsCurrentUser);
 
 // Edit a event
-// router.put("/:id");
+router.put("/:id", ensureAuthenticated, updateEvent);
 
 // Delete a event
 // router.delete("/:id");
