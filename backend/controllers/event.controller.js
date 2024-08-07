@@ -5,6 +5,7 @@ const {
   createEventInDb,
   updateEventInDb,
   getEventsFromDb,
+  deleteEventFromDb,
 } = require("../services/event.service");
 const { titleCase } = require("../util");
 const { RRule } = require("rrule");
@@ -100,7 +101,7 @@ const createEvent = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   const { id } = req.params;
-  console.log(`id = ${id}`);
+
   let zodResult = await z.string().uuid().safeParseAsync(id);
   if (!zodResult.success) {
     return res.status(400).send({
@@ -224,8 +225,44 @@ const getEventsCurrentUser = async (req, res) => {
   }
 };
 
+const deleteEvent = async (req, res) => {
+  const { id } = req.params;
+
+  let zodResult = await z.string().uuid().safeParseAsync(id);
+  if (!zodResult.success) {
+    return res.status(400).send({
+      alert: {
+        type: "danger",
+        message: "Invalid ID in URL",
+      },
+    });
+  }
+
+  try {
+    const event = await deleteEventFromDb(id, req.user.id);
+    console.log(event);
+
+    return res.send({
+      alert: {
+        type: "success",
+        message: `${titleCase(event.type)} "${event.name}" deleted`,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).send({
+      alert: {
+        type: "danger",
+        heading: "DB error",
+        message: "Check Node logs",
+      },
+    });
+  }
+};
+
 module.exports = {
   createEvent,
   updateEvent,
   getEventsCurrentUser,
+  deleteEvent,
 };

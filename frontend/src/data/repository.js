@@ -71,3 +71,13 @@ export const updateEvent = async (id, fields) => {
 
   return response;
 };
+
+export const deleteEventById = async id => {
+  const response = await axios
+    .delete(`/events/${id}`, { params: { id } })
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};

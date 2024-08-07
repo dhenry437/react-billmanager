@@ -5,7 +5,6 @@ import { format, isAfter } from "date-fns";
 import { getOrdinalWeekdayOfMonth, titleCase } from "../util";
 import { createEvent, getEventById, updateEvent } from "../data/repository";
 import Spinner from "./Spinner";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Alert from "./Alert";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -14,8 +13,6 @@ export const EventForm = () => {
 
   const { eventId } = useParams();
   const navigate = useNavigate();
-
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const [alerts, setAlerts] = useState({ form: null });
   const [loading, setLoading] = useState({ form: false });
@@ -79,8 +76,6 @@ export const EventForm = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-
-    const token = await executeRecaptcha("create_event");
 
     setLoading({ ...loading, form: true });
     setAlerts({ ...alerts, form: null });

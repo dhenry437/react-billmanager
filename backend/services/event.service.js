@@ -104,9 +104,22 @@ const getEventsFromDb = async (userId, search) => {
   });
 };
 
+const deleteEventFromDb = async (id, userId) => {
+  const event = await Event.findOne({ where: { id, userId } });
+
+  if (!event) {
+    console.log(`--\nERROR: User ${userId} tried to delete event ${id}\n--`);
+  }
+
+  await event.destroy();
+
+  return event;
+};
+
 module.exports = {
   createRRule,
   createEventInDb,
   updateEventInDb,
   getEventsFromDb,
+  deleteEventFromDb,
 };

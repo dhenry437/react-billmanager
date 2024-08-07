@@ -3,6 +3,7 @@ const {
   createEvent,
   getEventsCurrentUser,
   updateEvent,
+  deleteEvent,
 } = require("../controllers/event.controller");
 const { ensureAuthenticated } = require("../middleware/auth.middleware");
 const router = express.Router();
@@ -17,6 +18,6 @@ router.get("", ensureAuthenticated, getEventsCurrentUser);
 router.put("/:id", ensureAuthenticated, updateEvent);
 
 // Delete a event
-// router.delete("/:id");
+router.delete("/:id", ensureAuthenticated, deleteEvent);
 
 module.exports = router;
