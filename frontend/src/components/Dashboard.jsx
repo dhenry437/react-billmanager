@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { titleCase } from "../util";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  ClockIcon,
   EllipsisHorizontalIcon,
 } from "@heroicons/react/20/solid";
 import {
@@ -19,53 +19,22 @@ import {
   endOfWeek,
   format,
   getDate,
-  isEqual,
   isSameDay,
   isSameMonth,
   isToday,
-  parse,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { getCalendarEvents } from "../data/repository";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-
   const today = format(new Date(), "yyyy-MM-dd", new Date());
   const [selectedDate, setSelectedDate] = useState(today);
+  const [events, setEvents] = useState([]);
 
   const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const yearMonth = format(new Date(), "yyyy-MM-");
-  const calendarEvents = [
-    {
-      date: `${yearMonth}3`,
-      events: [
-        { time: "10AM", name: "Design review", href: "#" },
-        { time: "2PM", name: "Sales meeting", href: "#" },
-      ],
-    },
-    {
-      date: `${yearMonth}20`,
-      events: [{ time: "6PM", name: "Date night", href: "#" }],
-    },
-    {
-      date: `${yearMonth}14`,
-      events: [{ time: "2PM", name: "Sam's birthday party", href: "#" }],
-    },
-    {
-      date: `${yearMonth}27`,
-      events: [
-        { time: "3PM", name: "Maple syrup museum", href: "#" },
-        { time: "7PM", name: "Hockey game", href: "#" },
-        { time: "11PM", name: "Revolver Upstairs", href: "#" },
-      ],
-    },
-    {
-      date: `${yearMonth}4`,
-      events: [{ time: "9PM", name: "Cinema with friends", href: "#" }],
-    },
-  ];
+
   const firstDayOfMonth = startOfMonth(selectedDate);
   const monthViewDates = eachDayOfInterval({
     start: startOfWeek(firstDayOfMonth),
@@ -74,18 +43,30 @@ export default function Dashboard() {
   // Map calendar events to dates
   const calendarDates = monthViewDates.map(x => ({
     date: x,
-    events:
-      calendarEvents.find(y =>
-        isEqual(
-          parse(y.date, "yyyy-MM-dd", new Date()),
-          parse(x, "yyyy-MM-dd", new Date())
-        )
-      )?.events || null,
+    events: null,
   }));
 
+  const getEventColour = type => {
+    return type === "bill" ? "red" : "green";
+  };
+
   // Should only fire when month view changes
-  const monthAndYear = format(selectedDate, "yyyy-MM");
-  useEffect(() => {}, [monthAndYear]);
+  const fetchEvents = useCallback(async yearMonth => {
+    const response = await getCalendarEvents(yearMonth);
+
+    if (response.status === 200) {
+      const { monthViewEvents } = response.data;
+
+      if (monthViewEvents) {
+        setEvents(monthViewEvents);
+      }
+    }
+  }, []);
+
+  const yearMonth = format(selectedDate, "yyyy-MM");
+  useEffect(() => {
+    fetchEvents(yearMonth);
+  }, [fetchEvents, yearMonth]);
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");
@@ -105,11 +86,6 @@ export default function Dashboard() {
 
   const handleClickToday = () => {
     setSelectedDate(today);
-  };
-
-  const handleClickLink = (e, href) => {
-    e.stopPropagation();
-    navigate(href);
   };
 
   return (
@@ -186,8 +162,8 @@ export default function Dashboard() {
                     <div className="py-1">
                       <MenuItem>
                         {({ focus }) => (
-                          <a
-                            href="#"
+                          <Link
+                            to="/bills/add"
                             className={classNames(
                               focus
                                 ? "bg-gray-100 text-gray-900"
@@ -195,13 +171,13 @@ export default function Dashboard() {
                               "block px-4 py-2 text-sm"
                             )}>
                             Add bill
-                          </a>
+                          </Link>
                         )}
                       </MenuItem>
                       <MenuItem>
                         {({ focus }) => (
-                          <a
-                            href="#"
+                          <Link
+                            to="/paydays/add"
                             className={classNames(
                               focus
                                 ? "bg-gray-100 text-gray-900"
@@ -209,15 +185,15 @@ export default function Dashboard() {
                               "block px-4 py-2 text-sm"
                             )}>
                             Add payday
-                          </a>
+                          </Link>
                         )}
                       </MenuItem>
                     </div>
                     <div className="py-1">
                       <MenuItem>
                         {({ focus }) => (
-                          <a
-                            href="#"
+                          <button
+                            onClick={handleClickToday}
                             className={classNames(
                               focus
                                 ? "bg-gray-100 text-gray-900"
@@ -225,7 +201,7 @@ export default function Dashboard() {
                               "block px-4 py-2 text-sm"
                             )}>
                             Go to today
-                          </a>
+                          </button>
                         )}
                       </MenuItem>
                     </div>
@@ -239,7 +215,7 @@ export default function Dashboard() {
               {weekdays.map(weekday => (
                 <div key={weekday} className="bg-white py-2">
                   {/* First letter only */}
-                  {Array.from(weekday)[0].toUpperCase()}
+                  {weekday.charAt(0).toUpperCase()}
                   <span className="sr-only sm:not-sr-only">
                     {/* The rest */}
                     {weekday.substring(1)}
@@ -250,7 +226,7 @@ export default function Dashboard() {
             <div className="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
               <div className={`w-full grid grid-cols-7 auto-rows-fr gap-px`}>
                 {calendarDates.map(calendarDate => {
-                  const { date, events } = calendarDate;
+                  const { date } = calendarDate;
                   const isCurrentMonth = isSameMonth(date, selectedDate);
                   const isSelectedDate = isSameDay(date, selectedDate);
                   const isCurrentDate = isToday(date);
@@ -281,39 +257,51 @@ export default function Dashboard() {
                         dateTime={format(date, "yyyy-MM-dd")}>
                         {getDate(date)}
                       </time>
-                      {events && (
+                      {events[date] && (
                         <>
                           <ol className="mt-2 w-full hidden lg:block">
-                            {events.slice(0, 2).map((event, i) => {
-                              const { time, name } = event;
+                            {events[date].slice(0, 2).map((event, i) => {
+                              const { type, id, amount, name } = event;
 
                               return (
-                                <a
+                                <Link
+                                  to={`/${type}s/${id}`}
                                   key={i}
-                                  onClick={e => handleClickLink(e, event.href)}
-                                  className="hover:visible flex group">
+                                  className={`flex group`}>
+                                  <p
+                                    className={`me-1 bg-${getEventColour(
+                                      type
+                                    )}-600 rounded-md text-white font-medium px-1.5 hidden xl:block`}>
+                                    {titleCase(type)}
+                                  </p>
+                                  <p
+                                    className={`me-1 bg-${getEventColour(
+                                      type
+                                    )}-600 rounded-md text-white font-medium px-1.5 xl:hidden`}>
+                                    {titleCase(type).charAt(0)}
+                                  </p>
                                   <p className="flex-1 truncate font-medium text-left text-gray-900 group-hover:text-indigo-600">
                                     {name}
                                   </p>
-                                  <time
-                                    dateTime={`${date} ${time}`}
-                                    className="ml-3 hidden flex-none text-gray-500 font-normal group-hover:text-indigo-600 xl:block">
-                                    {time}
-                                  </time>
-                                </a>
+                                  <p className="ml-0.5 flex-none text-gray-500 font-normal group-hover:text-indigo-600">
+                                    ${amount}
+                                  </p>
+                                </Link>
                               );
                             })}
                             {events?.length > 2 && (
                               <li className="text-gray-500">
-                                + {events.length - 2} more
+                                + {events[date].length - 2} more
                               </li>
                             )}
                           </ol>
                           <span className="-mx-0.5 mt-auto flex flex-wrap-reverse lg:hidden">
-                            {events.map((_, i) => (
+                            {events[date].map((event, i) => (
                               <span
                                 key={i}
-                                className="mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-gray-400"
+                                className={`mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-${getEventColour(
+                                  event.type
+                                )}-400`}
                               />
                             ))}
                           </span>
@@ -325,37 +313,33 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          {calendarDates.find(x => x.date === selectedDate).events?.length >
-          0 ? (
+          {events[selectedDate] ? (
             <div className="px-4 py-10 sm:px-6 lg:hidden">
               <ol className="divide-y divide-gray-100 overflow-hidden rounded-lg bg-white text-sm shadow ring-1 ring-black ring-opacity-5">
-                {calendarDates
-                  .find(x => x.date === selectedDate)
-                  .events.map((event, i) => (
-                    <li
-                      key={i}
-                      className="group flex p-4 pr-6 focus-within:bg-gray-50 hover:bg-gray-50">
-                      <div className="flex-auto">
-                        <p className="font-semibold text-gray-900">
-                          {event.name}
-                        </p>
-                        <time
-                          dateTime={`${event.date} ${event.time}`}
-                          className="mt-2 flex items-center text-gray-700">
-                          <ClockIcon
-                            className="mr-2 h-5 w-5 text-gray-400"
-                            aria-hidden="true"
-                          />
-                          {event.time}
-                        </time>
-                      </div>
-                      <Link
-                        to={event.href}
-                        className="ml-6 flex-none self-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 opacity-0 shadow-sm ring-1 ring-inset ring-gray-300 hover:ring-gray-400 focus:opacity-100 group-hover:opacity-100">
-                        Edit<span className="sr-only">, {event.name}</span>
-                      </Link>
-                    </li>
-                  ))}
+                {events[selectedDate].map((event, i) => (
+                  <li
+                    key={i}
+                    className="group flex p-4 pr-6 focus-within:bg-gray-50 hover:bg-gray-50">
+                    <div className="flex-auto">
+                      <p className="font-semibold text-gray-900">
+                        <span
+                          className={`bg-${getEventColour(
+                            event.type
+                          )}-600 rounded-md px-3 text-white me-1`}>
+                          {titleCase(event.type)}
+                        </span>
+                        {event.name}
+                      </p>
+                      <p className="text-gray-800">{event.description}</p>
+                      <p className="mt-2 text-gray-700">${event.amount}</p>
+                    </div>
+                    <Link
+                      to={`/${event.type}s/${event.id}`}
+                      className="ml-6 flex-none self-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 opacity-0 shadow-sm ring-1 ring-inset ring-gray-300 hover:ring-gray-400 focus:opacity-100 group-hover:opacity-100">
+                      Edit<span className="sr-only">, {event.name}</span>
+                    </Link>
+                  </li>
+                ))}
               </ol>
             </div>
           ) : (
