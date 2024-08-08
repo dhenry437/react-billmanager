@@ -28,6 +28,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
+import { getCalendarEvents } from "../data/repository";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -36,36 +37,36 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(today);
 
   const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const yearMonth = format(new Date(), "yyyy-MM-");
-  const calendarEvents = [
-    {
-      date: `${yearMonth}3`,
-      events: [
-        { time: "10AM", name: "Design review", href: "#" },
-        { time: "2PM", name: "Sales meeting", href: "#" },
-      ],
-    },
-    {
-      date: `${yearMonth}20`,
-      events: [{ time: "6PM", name: "Date night", href: "#" }],
-    },
-    {
-      date: `${yearMonth}14`,
-      events: [{ time: "2PM", name: "Sam's birthday party", href: "#" }],
-    },
-    {
-      date: `${yearMonth}27`,
-      events: [
-        { time: "3PM", name: "Maple syrup museum", href: "#" },
-        { time: "7PM", name: "Hockey game", href: "#" },
-        { time: "11PM", name: "Revolver Upstairs", href: "#" },
-      ],
-    },
-    {
-      date: `${yearMonth}4`,
-      events: [{ time: "9PM", name: "Cinema with friends", href: "#" }],
-    },
-  ];
+  // const yearMonth = format(new Date(), "yyyy-MM-");
+  // const calendarEvents = [
+  //   {
+  //     date: `${yearMonth}3`,
+  //     events: [
+  //       { time: "10AM", name: "Design review", href: "#" },
+  //       { time: "2PM", name: "Sales meeting", href: "#" },
+  //     ],
+  //   },
+  //   {
+  //     date: `${yearMonth}20`,
+  //     events: [{ time: "6PM", name: "Date night", href: "#" }],
+  //   },
+  //   {
+  //     date: `${yearMonth}14`,
+  //     events: [{ time: "2PM", name: "Sam's birthday party", href: "#" }],
+  //   },
+  //   {
+  //     date: `${yearMonth}27`,
+  //     events: [
+  //       { time: "3PM", name: "Maple syrup museum", href: "#" },
+  //       { time: "7PM", name: "Hockey game", href: "#" },
+  //       { time: "11PM", name: "Revolver Upstairs", href: "#" },
+  //     ],
+  //   },
+  //   {
+  //     date: `${yearMonth}4`,
+  //     events: [{ time: "9PM", name: "Cinema with friends", href: "#" }],
+  //   },
+  // ];
   const firstDayOfMonth = startOfMonth(selectedDate);
   const monthViewDates = eachDayOfInterval({
     start: startOfWeek(firstDayOfMonth),
@@ -74,18 +75,20 @@ export default function Dashboard() {
   // Map calendar events to dates
   const calendarDates = monthViewDates.map(x => ({
     date: x,
-    events:
-      calendarEvents.find(y =>
-        isEqual(
-          parse(y.date, "yyyy-MM-dd", new Date()),
-          parse(x, "yyyy-MM-dd", new Date())
-        )
-      )?.events || null,
+    events: null,
+    // calendarEvents?.find(y =>
+    //   isEqual(
+    //     parse(y.date, "yyyy-MM-dd", new Date()),
+    //     parse(x, "yyyy-MM-dd", new Date())
+    //   )
+    // )?.events ||
   }));
 
   // Should only fire when month view changes
-  const monthAndYear = format(selectedDate, "yyyy-MM");
-  useEffect(() => {}, [monthAndYear]);
+  const yearMonth = format(selectedDate, "yyyy-MM");
+  useEffect(() => {
+    getCalendarEvents(yearMonth);
+  }, [yearMonth]);
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");

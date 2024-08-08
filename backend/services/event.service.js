@@ -2,10 +2,9 @@ const db = require("../db");
 const Sequelize = db.Sequelize;
 const Event = db.events;
 
-const { datetime, RRule, RRuleSet, rrulestr } = require("rrule");
+const { RRule } = require("rrule");
 const { getDate, format } = require("date-fns");
 const { getOrdinalOfMonth } = require("../util");
-const { where } = require("sequelize");
 
 const freqDictionary = {
   days: RRule.DAILY,
@@ -99,6 +98,7 @@ const getEventsFromDb = async (userId, search) => {
       "amount",
       "rruleString",
       "reactState",
+      "type",
     ],
     raw: true,
   });
