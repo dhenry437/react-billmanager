@@ -81,3 +81,13 @@ export const deleteEventById = async id => {
 
   return response;
 };
+
+export const getCalendarEvents = async yearMonth => {
+  const response = await axios
+    .get(`/calendar/${yearMonth}`, { params: {} })
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};

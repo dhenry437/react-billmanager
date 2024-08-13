@@ -20,6 +20,7 @@ app.use(
 );
 
 const db = require("./db");
+const { getCalendarEvents } = require("./controllers/calendar.controller.js");
 db.sequelize.sync();
 // db.sequelize.sync({ force: true })
 
@@ -48,6 +49,7 @@ app.use("/api", require("./routes/index.route"));
 app.use("/api/auth", require("./routes/auth.route"));
 app.use("/api/users", require("./routes/user.route"));
 app.use("/api/events", require("./routes/event.route"));
+app.use("/api/calendar", require("./routes/calendar.route"));
 
 app.listen(process.env.HTTP_PORT, () => {
   console.log(`Listening on port ${process.env.HTTP_PORT}`);

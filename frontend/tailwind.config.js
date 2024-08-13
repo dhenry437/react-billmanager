@@ -11,6 +11,14 @@ export default {
       pattern: /bg-(green|blue|yellow|red)-50/,
     },
     {
+      pattern: /bg-(green|red|gray|indigo)-\d{3}/,
+      variants: ["hover"],
+    },
+    {
+      pattern: /bg-(green|red)-600/,
+      variants: ["hover"],
+    },
+    {
       pattern: /text-(green|blue|yellow|red)-800/,
     },
     {
