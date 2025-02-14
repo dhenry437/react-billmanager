@@ -38,7 +38,6 @@ export default {
       pattern: /ring-(green|blue|yellow|red)-600/,
       variants: ["focus"],
     },
-
     {
       pattern: /ring-offset-(green|blue|yellow|red)-50/,
       variants: ["focus"],

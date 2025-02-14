@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import CalendarEvent from "./CalendarEvent";
 
 export default function CalendarEvents(props) {
-  const { events } = props;
+  const { events, breakdownModalOpen, setBreakdownModalOpen } = props;
 
   const getEventColour = type => {
     switch (type) {
@@ -26,15 +26,15 @@ export default function CalendarEvents(props) {
                 const { amount, breakdown } = event.deposit;
 
                 return (
-                  <>
-                    <CalendarEvent
-                      key="deposit"
-                      name="Deposit"
-                      amount={amount}
-                      type="deposit"
-                      breakdown={breakdown}
-                    />
-                  </>
+                  <CalendarEvent
+                    key="deposit"
+                    name="Deposit"
+                    amount={amount}
+                    type="deposit"
+                    breakdown={breakdown}
+                    breakdownModalOpen={breakdownModalOpen}
+                    setBreakdownModalOpen={setBreakdownModalOpen}
+                  />
                 );
               })}
             {events.slice(0, 2).map(event => {
@@ -55,6 +55,19 @@ export default function CalendarEvents(props) {
             )}
           </ol>
           <span className="-mx-0.5 mt-auto flex flex-wrap-reverse lg:hidden">
+            {events
+              .filter(x => x.deposit)
+              ?.map(event => {
+                const { id } = event;
+                return (
+                  <span
+                    key={id}
+                    className={`mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-${getEventColour(
+                      "deposit"
+                    )}-400`}
+                  />
+                );
+              })}
             {events.map(event => {
               const { id } = event;
               return (
@@ -75,4 +88,6 @@ export default function CalendarEvents(props) {
 
 CalendarEvents.propTypes = {
   events: PropTypes.array.isRequired,
+  breakdownModalOpen: PropTypes.bool.isRequired,
+  setBreakdownModalOpen: PropTypes.func.isRequired,
 };

@@ -1,12 +1,17 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import BreakdownModal from "./BreakdownModal";
-import { useState } from "react";
 
 export default function CalendarEvent(props) {
-  const { id, name, amount, type, breakdown } = props;
-
-  const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
+  const {
+    id,
+    name,
+    amount,
+    type,
+    breakdown,
+    breakdownModalOpen,
+    setBreakdownModalOpen,
+  } = props;
 
   const getEventColour = type => {
     switch (type) {
@@ -73,4 +78,6 @@ CalendarEvent.propTypes = {
   amount: PropTypes.number.isRequired,
   type: PropTypes.string.isRequired,
   breakdown: PropTypes.array,
+  breakdownModalOpen: PropTypes.bool.isRequired,
+  setBreakdownModalOpen: PropTypes.func.isRequired,
 };
