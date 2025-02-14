@@ -58,9 +58,6 @@ const getCalendarEvents = async (req, res) => {
 
     let depositEvents = calculateDepositEvents(monthViewEvents, events);
     if (depositEvents) {
-      console.log(depositEvents[1]);
-      console.log(depositEvents[1].deposit.breakdown);
-
       // Add deposit events to monthViewEvents
       depositEvents.map(depositEvent => {
         const { date, deposit } = depositEvent;
