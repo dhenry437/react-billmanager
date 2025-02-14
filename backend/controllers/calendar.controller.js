@@ -40,40 +40,42 @@ const getCalendarEvents = async (req, res) => {
         .flat(),
     }));
 
-    // const monthViewEvents = events
-    //   .map(x =>
-    //     x.occurrences
-    //       .map(y => ({
-    //         [format(y, "yyyy-MM-dd")]: {
-    //           name: x.name,
-    //           description: x.description,
-    //           type: x.type,
-    //           amount: x.amount,
-    //         },
-    //       }))
-    //       .flat()
-    //   )
-    //   .flat();
-
-    let monthViewEvents = {};
+    // Push event occurrences into monthView
+    let monthViewEvents = [];
     events.forEach(event =>
       event.occurrences.forEach(occurrence => {
-        (monthViewEvents[format(occurrence, "yyyy-MM-dd")] =
-          monthViewEvents[format(occurrence, "yyyy-MM-dd")] || []).push({
+        monthViewEvents.push({
+          date: format(occurrence, "yyyy-MM-dd"),
           id: event.id,
           name: event.name,
           description: event.description,
           type: event.type,
           amount: event.amount,
+          rrule: event.rrule,
         });
       })
     );
 
-    res.send({ monthViewEvents });
+    let depositEvents = calculateDepositEvents(monthViewEvents, events);
+    if (depositEvents) {
+      console.log(depositEvents[1]);
+      console.log(depositEvents[1].deposit.breakdown);
 
-    // Sort events into bills and paydays
-    // let bills = events.filter(x => x.type === "bill");
-    // let paydays = events.filter(x => x.type === "payday");
+      // Add deposit events to monthViewEvents
+      depositEvents.map(depositEvent => {
+        const { date, deposit } = depositEvent;
+
+        monthViewEvents[
+          monthViewEvents.findIndex(
+            monthViewEvent => monthViewEvent.date === date
+          )
+        ].deposit = deposit;
+
+        return depositEvent;
+      });
+    }
+
+    res.send({ monthViewEvents });
   } catch (e) {
     console.log(e);
     return res.status(500).send({
@@ -84,6 +86,67 @@ const getCalendarEvents = async (req, res) => {
       },
     });
   }
+};
+
+const calculateDepositEvents = (monthViewEvents, events) => {
+  // Sort events into bills and paydays
+  const bills = events.filter(x => x.type === "bill"); // ? All bills
+  const paydays = monthViewEvents.filter(x => x.type === "payday"); // ? Only in view paydays
+
+  depositEvents = [];
+  paydays.forEach(payday => {
+    const { date: pDate, rrule: pRRule } = payday;
+    const nextPayday = pRRule.after(new Date(pDate));
+
+    currentDepositEventIndex =
+      depositEvents.push({
+        date: pDate,
+        deposit: { amount: null, breakdown: [] },
+      }) - 1;
+
+    bills.forEach(bill => {
+      const {
+        name: bName,
+        rrule: bRRule,
+        amount: bAmount,
+        id: bId,
+        description: bDescription,
+      } = bill;
+
+      const bNext = bRRule.after(new Date(pDate));
+      const bPrevious = bRRule.before(new Date(pDate)); // TODO: || bill creation date
+
+      const billsInPaydayCycle = bRRule.between(
+        new Date(pDate),
+        new Date(nextPayday)
+      );
+
+      let billAmount = 0;
+      if (billsInPaydayCycle.length > 1) {
+        billAmount = bAmount * billsInPaydayCycle.length;
+      } else {
+        const paydaysInBillCycle = pRRule.between(
+          new Date(bPrevious),
+          new Date(bNext)
+        );
+
+        billAmount = bAmount / paydaysInBillCycle.length;
+      }
+
+      depositEvents[currentDepositEventIndex].deposit.breakdown.push({
+        name: bName,
+        amount: billAmount,
+        id: bId,
+        description: bDescription,
+      });
+    });
+
+    depositEvents[currentDepositEventIndex].deposit.amount = depositEvents[
+      currentDepositEventIndex
+    ].deposit.breakdown.reduce((partialSum, x) => partialSum + x.amount, 0);
+  });
+
+  return depositEvents;
 };
 
 module.exports = {

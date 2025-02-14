@@ -240,7 +240,6 @@ const deleteEvent = async (req, res) => {
 
   try {
     const event = await deleteEventFromDb(id, req.user.id);
-    console.log(event);
 
     return res.send({
       alert: {
