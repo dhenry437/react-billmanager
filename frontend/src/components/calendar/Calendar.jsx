@@ -1,5 +1,4 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { titleCase } from "../../util";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -28,14 +27,14 @@ import {
 import { Link } from "react-router-dom";
 import { getCalendarEvents } from "../../data/repository";
 import CalendarEvents from "./CalendarEvents";
-import BreakdownModal from "./BreakdownModal";
+import TargetSavings from "./TargetSavings";
+import MobileCalendarEvents from "./MobileCalendarEvents";
 
 export default function Calendar() {
   const today = format(new Date(), "yyyy-MM-dd", new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [events, setEvents] = useState([]);
-
-  const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
+  const [dailyTargetSavings, setDailyTargetSavings] = useState([]);
 
   const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
@@ -59,7 +58,11 @@ export default function Calendar() {
     const response = await getCalendarEvents(yearMonth);
 
     if (response.status === 200) {
-      const { monthViewEvents } = response.data;
+      const { monthViewEvents, dailyTargetSavings } = response.data;
+
+      if (dailyTargetSavings) {
+        setDailyTargetSavings(dailyTargetSavings);
+      }
 
       if (monthViewEvents) {
         setEvents(monthViewEvents);
@@ -249,23 +252,33 @@ export default function Calendar() {
                         ? "font-semibold text-white bg-gray-50"
                         : "bg-gray-50 text-gray-500"
                     } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full`}>
-                    <time
-                      className={`${
-                        isSelectedDate
-                          ? `flex h-6 w-6 items-center justify-center rounded-full ${
-                              isCurrentDate ? "bg-indigo-600" : "bg-gray-900"
-                            }`
-                          : "flex"
-                      } ml-auto lg:ml-0`}
-                      dateTime={format(date, "yyyy-MM-dd")}>
-                      {getDate(date)}
-                    </time>
+                    <div className="flex items-center justify-between">
+                      <time
+                        className={`${
+                          isSelectedDate
+                            ? `flex h-6 w-6 items-center justify-center rounded-full ${
+                                isCurrentDate ? "bg-indigo-600" : "bg-gray-900"
+                              }`
+                            : "flex"
+                        } ml-auto lg:ml-0`}
+                        dateTime={format(date, "yyyy-MM-dd")}>
+                        {getDate(date)}
+                      </time>
+                      {dailyTargetSavings.find(x => x.date === date) && (
+                        <div className="hidden lg:block">
+                          <TargetSavings
+                            targetSavings={
+                              dailyTargetSavings.find(x => x.date === date)
+                                .targetSavings
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
                     {events.filter(x => x.date === date).length > 0 && (
                       <CalendarEvents
                         key={date}
                         events={events.filter(x => x.date === date)}
-                        breakdownModalOpen={breakdownModalOpen}
-                        setBreakdownModalOpen={setBreakdownModalOpen}
                       />
                     )}
                   </button>
@@ -274,96 +287,14 @@ export default function Calendar() {
             </div>
           </div>
         </div>
-        {events.filter(x => x.date === selectedDate).length > 0 ? (
-          <div className="px-4 py-10 sm:px-6 lg:hidden">
-            <ol className="divide-y divide-gray-100 overflow-hidden rounded-lg bg-white text-sm shadow ring-1 ring-black ring-opacity-5">
-              {events
-                .filter(x => x.date === selectedDate)
-                .map((event, i) => {
-                  const { id, type, name, description, amount } = event;
 
-                  return (
-                    <li
-                      key={i}
-                      className="group flex p-4 pr-6 focus-within:bg-gray-50 hover:bg-gray-50">
-                      <div className="flex-auto">
-                        <span
-                          className={`inline-flex items-center justify-between gap-x-1.5 rounded-md bg-${getEventColour(
-                            type
-                          )}-100 hover:bg-${getEventColour(
-                            type
-                          )}-200 px-2 py-1 text-xs font-normal text-${getEventColour(
-                            type
-                          )}-700`}>
-                          <div className="inline-flex items-center gap-x-1.5">
-                            <svg
-                              className={`h-1.5 w-1.5 fill-${getEventColour(
-                                type
-                              )}-500`}
-                              viewBox="0 0 6 6"
-                              aria-hidden="true">
-                              <circle cx={3} cy={3} r={3} />
-                            </svg>
-                            <span>{titleCase(type)}</span>
-                          </div>
-                        </span>
-                        <p className=" mt-2 font-semibold text-gray-900">
-                          {name}
-                        </p>
-                        <p className="text-gray-800">{description}</p>
-                        <p className="mt-2 text-gray-700">${amount}</p>
-                      </div>
-                      <Link
-                        to={`/${type}s/${id}`}
-                        className="ml-6 flex-none self-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 opacity-0 shadow-sm ring-1 ring-inset ring-gray-300 hover:ring-gray-400 focus:opacity-100 group-hover:opacity-100">
-                        Edit<span className="sr-only">, {name}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-
-              {events
-                .filter(x => x.date === selectedDate)
-                .filter(x => x.deposit) &&
-                events
-                  .filter(x => x.date === selectedDate)
-                  .filter(x => x.deposit)
-                  .map(event => {
-                    const { deposit } = event;
-                    const { amount, breakdown } = deposit;
-
-                    return (
-                      <li
-                        key="deposit"
-                        className="group flex items-center p-4 pr-6 focus-within:bg-blue-200 hover:bg-blue-200 bg-blue-100 text-blue-800 font-medium">
-                        <span className="flex-grow">{`You need to deposit $${parseFloat(
-                          amount.toFixed(2)
-                        )}`}</span>
-                        <button
-                          onClick={setBreakdownModalOpen}
-                          className="ml-6 flex-none self-center rounded-md bg-white px-3 py-2 font-semibold text-gray-900 opacity-0 shadow-sm ring-1 ring-inset ring-gray-300 hover:ring-gray-400 focus:opacity-100 group-hover:opacity-100">
-                          Breakdown<span className="sr-only"></span>
-                        </button>
-
-                        <BreakdownModal
-                          breakdownModalOpen={breakdownModalOpen}
-                          setBreakdownModalOpen={setBreakdownModalOpen}
-                          breakdown={breakdown}
-                        />
-                      </li>
-                    );
-                  })}
-            </ol>
-          </div>
-        ) : (
-          <div className="px-4 py-10 sm:px-6 lg:hidden">
-            <div className="flex justify-center">
-              <p className="font-medium text-gray-500">
-                Nothing on for the day
-              </p>
-            </div>
-          </div>
-        )}
+        <MobileCalendarEvents
+          events={events.filter(x => x.date === selectedDate)}
+          getEventColour={getEventColour}
+          targetSavings={
+            dailyTargetSavings.find(x => x.date === selectedDate)?.targetSavings
+          }
+        />
       </div>
     </div>
   );

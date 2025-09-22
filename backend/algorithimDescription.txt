@@ -1,0 +1,20 @@
+Payday cycle starts the day of payday until day before next payday
+Bill cycle starts the day of bill until day before next bill
+
+For each payday
+	Establish payday cycle
+	For each bill
+		If a bill occurs multiple times in payday cycle
+			billProportion = billAmount * number of times it occurs in the payday cycle
+		If not
+			Establish bill cycle
+			Count paydays in bill cycle
+			billProportion = billAmount / number of paydays in bill cycle
+
+For each day
+	Establish payday cycle
+	For each bill
+		If it occurs multiple times in the payday cycle
+			billProportion = billAmount * number of REMAINING bill occurrences
+		If not, 
+			billProportion = ( billAmount / number of paydays in the bill cycle ) * number of those paydays already past

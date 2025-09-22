@@ -2,7 +2,7 @@ const z = require("zod");
 const { RRule } = require("rrule");
 const { getEventsFromDb } = require("../services/event.service");
 const { getMonthViewDates } = require("../services/calendar.service");
-const { format } = require("date-fns");
+const { format, subDays, addDays, startOfDay } = require("date-fns");
 
 const getCalendarEvents = async (req, res) => {
   const { yearMonth } = req.params;
@@ -56,23 +56,43 @@ const getCalendarEvents = async (req, res) => {
       })
     );
 
-    let depositEvents = calculateDepositEvents(monthViewEvents, events);
+    const allBillEvents = events.filter(event => event.type === "bill"); // Get all bill events
+    const allPaydayEvents = events.filter(event => event.type === "payday"); // Get all payday events
+    const monthViewPaydayEvents = monthViewEvents.filter(
+      event => event.type === "payday"
+    ); // Get payday occurrences in the current month view
+
+    // Calculate daily savings first, as it's the source of truth for deposits
+    const dailyTargetSavings = calculateDailyTargetSavings(
+      monthViewDates,
+      allBillEvents,
+      allPaydayEvents
+    );
+
+    const depositEvents = calculateDepositEvents(
+      monthViewPaydayEvents,
+      dailyTargetSavings
+    );
+
     if (depositEvents) {
       // Add deposit events to monthViewEvents
       depositEvents.map(depositEvent => {
         const { date, deposit } = depositEvent;
 
-        monthViewEvents[
-          monthViewEvents.findIndex(
-            monthViewEvent => monthViewEvent.date === date
-          )
-        ].deposit = deposit;
+        const index = monthViewEvents.findIndex(
+          monthViewEvent =>
+            monthViewEvent.date === date && monthViewEvent.type === "payday"
+        );
+
+        if (index !== -1) {
+          monthViewEvents[index].deposit = deposit;
+        }
 
         return depositEvent;
       });
     }
 
-    res.send({ monthViewEvents });
+    res.send({ monthViewEvents, dailyTargetSavings });
   } catch (e) {
     console.log(e);
     return res.status(500).send({
@@ -85,65 +105,194 @@ const getCalendarEvents = async (req, res) => {
   }
 };
 
-const calculateDepositEvents = (monthViewEvents, events) => {
-  // Sort events into bills and paydays
-  const bills = events.filter(x => x.type === "bill"); // ? All bills
-  const paydays = monthViewEvents.filter(x => x.type === "payday"); // ? Only in view paydays
+const calculateDepositEvents = (monthViewPaydayEvents, dailyTargetSavings) => {
+  const depositEvents = [];
+  monthViewPaydayEvents.forEach(monthViewPaydayEvent => {
+    const { date: paydayDateString } = monthViewPaydayEvent;
 
-  depositEvents = [];
-  paydays.forEach(payday => {
-    const { date: pDate, rrule: pRRule } = payday;
-    const nextPayday = pRRule.after(new Date(pDate));
+    // Find the target savings for the payday and the day before
+    const paydayTarget = dailyTargetSavings.find(
+      d => d.date === paydayDateString
+    );
 
-    currentDepositEventIndex =
-      depositEvents.push({
-        date: pDate,
-        deposit: { amount: null, breakdown: [] },
-      }) - 1;
+    const dayBefore = format(
+      subDays(new Date(paydayDateString), 1),
+      "yyyy-MM-dd"
+    );
+    const dayBeforeTarget = dailyTargetSavings.find(d => d.date === dayBefore);
 
-    bills.forEach(bill => {
+    if (!paydayTarget) return;
+
+    const depositBreakdown = [];
+
+    paydayTarget.targetSavings.breakdown.forEach(paydayBill => {
       const {
-        name: bName,
-        rrule: bRRule,
-        amount: bAmount,
-        id: bId,
-        description: bDescription,
-      } = bill;
+        id,
+        name,
+        amount: newTargetAmount,
+        description,
+        nextBillOccurrenceDate,
+      } = paydayBill;
 
-      const bNext = bRRule.after(new Date(pDate));
-      const bPrevious = bRRule.before(new Date(pDate)); // TODO: || bill creation date
-
-      const billsInPaydayCycle = bRRule.between(
-        new Date(pDate),
-        new Date(nextPayday)
+      const prevDayBill = dayBeforeTarget?.targetSavings.breakdown.find(
+        b => b.id === id
       );
+      const oldTargetAmount = prevDayBill ? prevDayBill.amount : 0;
+      const oldNextBillDate = prevDayBill
+        ? prevDayBill.nextBillOccurrenceDate
+        : null;
 
-      let billAmount = 0;
-      if (billsInPaydayCycle.length > 1) {
-        billAmount = bAmount * billsInPaydayCycle.length;
+      let amountToDeposit = 0;
+      if (nextBillOccurrenceDate?.getTime() === oldNextBillDate?.getTime()) {
+        // NORMAL CASE: Target is for the same upcoming bill, so deposit is the difference.
+        amountToDeposit = newTargetAmount - oldTargetAmount;
       } else {
-        const paydaysInBillCycle = pRRule.between(
-          new Date(bPrevious),
-          new Date(bNext)
-        );
-
-        billAmount = bAmount / paydaysInBillCycle.length;
+        // BOUNDARY CASE: The bill cycle has rolled over. The deposit is the full new target amount.
+        amountToDeposit = newTargetAmount;
       }
 
-      depositEvents[currentDepositEventIndex].deposit.breakdown.push({
-        name: bName,
-        amount: billAmount,
-        id: bId,
-        description: bDescription,
-      });
+      if (amountToDeposit > 0) {
+        depositBreakdown.push({
+          name: name,
+          amount: amountToDeposit,
+          id: id,
+          description: description,
+        });
+      }
     });
 
-    depositEvents[currentDepositEventIndex].deposit.amount = depositEvents[
-      currentDepositEventIndex
-    ].deposit.breakdown.reduce((partialSum, x) => partialSum + x.amount, 0);
+    const totalDepositAmount = depositBreakdown.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    if (totalDepositAmount > 0) {
+      depositEvents.push({
+        date: paydayDateString,
+        deposit: {
+          amount: totalDepositAmount,
+          breakdown: depositBreakdown,
+        },
+      });
+    }
   });
 
   return depositEvents;
+};
+
+const calculateDailyTargetSavings = (
+  monthViewDates,
+  allBillEvents,
+  allPaydayEvents
+) => {
+  const dailySavings = [];
+
+  for (const dateStr of monthViewDates) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const currentDay = new Date(Date.UTC(year, month - 1, day));
+
+    const breakdownForThisDay = [];
+
+    let lastPayday = null;
+    let nextPayday = null;
+
+    for (const payday of allPaydayEvents) {
+      const paydayRule = payday.rrule;
+      const before = paydayRule.before(currentDay, true);
+      if (before && (!lastPayday || before > lastPayday)) {
+        lastPayday = before;
+      }
+      const after = paydayRule.after(currentDay);
+      if (after && (!nextPayday || after < nextPayday)) {
+        nextPayday = after;
+      }
+    }
+
+    for (const bill of allBillEvents) {
+      const billRule = bill.rrule;
+      let billProportion = 0;
+      let nextBillOccurrence = null;
+
+      if (lastPayday && nextPayday) {
+        const paydayCycleStart = lastPayday;
+        const paydayCycleEnd = subDays(nextPayday, 1);
+
+        const occurrencesInPaydayCycle = billRule.between(
+          paydayCycleStart,
+          paydayCycleEnd,
+          true
+        ).length;
+
+        if (occurrencesInPaydayCycle > 1) {
+          const remainingOccurrences = billRule.between(
+            addDays(currentDay, 1),
+            paydayCycleEnd,
+            true
+          );
+          billProportion = bill.amount * remainingOccurrences.length;
+          nextBillOccurrence = remainingOccurrences[0]; // Not perfect, but an approximation
+        } else {
+          nextBillOccurrence = billRule.after(currentDay);
+          if (nextBillOccurrence) {
+            let billCycleStartDate = billRule.before(nextBillOccurrence);
+            if (!billCycleStartDate) {
+              billCycleStartDate = billRule.origOptions.dtstart;
+            }
+
+            let totalPaydaysInBillCycle = 0;
+            for (const paydayEvent of allPaydayEvents) {
+              const paydayRule = paydayEvent.rrule;
+              totalPaydaysInBillCycle += paydayRule.between(
+                billCycleStartDate,
+                subDays(nextBillOccurrence, 1),
+                true
+              ).length;
+            }
+
+            let passedPaydaysInCycle = 0;
+            for (const paydayEvent of allPaydayEvents) {
+              const paydayRule = paydayEvent.rrule;
+              passedPaydaysInCycle += paydayRule.between(
+                billCycleStartDate,
+                currentDay,
+                true
+              ).length;
+            }
+
+            if (totalPaydaysInBillCycle > 0) {
+              const proportion = passedPaydaysInCycle / totalPaydaysInBillCycle;
+              billProportion = bill.amount * proportion;
+            }
+          }
+        }
+      }
+
+      if (billProportion > 0) {
+        const { name, id, description } = bill;
+        breakdownForThisDay.push({
+          name: name,
+          amount: billProportion,
+          id: id,
+          description: description,
+          nextBillOccurrenceDate: nextBillOccurrence,
+        });
+      }
+    }
+
+    const totalNeededForDay = breakdownForThisDay.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    dailySavings.push({
+      date: dateStr,
+      targetSavings: {
+        amount: totalNeededForDay,
+        breakdown: breakdownForThisDay,
+      },
+    });
+  }
+  return dailySavings;
 };
 
 module.exports = {

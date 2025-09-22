@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import CalendarEvent from "./CalendarEvent";
 
 export default function CalendarEvents(props) {
-  const { events, breakdownModalOpen, setBreakdownModalOpen } = props;
+  const { events } = props;
 
   const getEventColour = type => {
     switch (type) {
@@ -19,6 +19,7 @@ export default function CalendarEvents(props) {
     <>
       {events.length > 0 && (
         <>
+          {/* -- Desktop -- */}
           <ol className="mt-2 w-full hidden lg:block">
             {events
               .filter(x => x.deposit)
@@ -32,12 +33,11 @@ export default function CalendarEvents(props) {
                     amount={amount}
                     type="deposit"
                     breakdown={breakdown}
-                    breakdownModalOpen={breakdownModalOpen}
-                    setBreakdownModalOpen={setBreakdownModalOpen}
                   />
                 );
               })}
-            {events.slice(0, 2).map(event => {
+            {/* {events.slice(0, 2).map(event => { */}
+            {events.map(event => {
               const { type, id, amount, name } = event;
 
               return (
@@ -50,10 +50,11 @@ export default function CalendarEvents(props) {
                 />
               );
             })}
-            {events.length > 2 && (
+            {/* {events.length > 2 && (
               <li className="text-gray-500">+ {events.length - 2} more</li>
-            )}
+            )} */}
           </ol>
+          {/*  -- Dots for Mobile -- */}
           <span className="-mx-0.5 mt-auto flex flex-wrap-reverse lg:hidden">
             {events
               .filter(x => x.deposit)
@@ -88,6 +89,4 @@ export default function CalendarEvents(props) {
 
 CalendarEvents.propTypes = {
   events: PropTypes.array.isRequired,
-  breakdownModalOpen: PropTypes.bool.isRequired,
-  setBreakdownModalOpen: PropTypes.func.isRequired,
 };
