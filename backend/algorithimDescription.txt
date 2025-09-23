@@ -1,5 +1,5 @@
-Payday cycle starts the day of payday until day before next payday
-Bill cycle starts the day of bill until day before next bill
+Payday cycle starts the day after the  payday until next payday
+Bill cycle starts the day after the  bill until next bill
 
 For each payday
 	Establish payday cycle
