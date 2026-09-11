@@ -18,3 +18,5 @@ For each day
 			billProportion = billAmount * number of REMAINING bill occurrences
 		If not, 
 			billProportion = ( billAmount / number of paydays in the bill cycle ) * number of those paydays already past
+
+

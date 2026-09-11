@@ -69,28 +69,29 @@ const getCalendarEvents = async (req, res) => {
       allPaydayEvents
     );
 
-    const depositEvents = calculateDepositEvents(
-      monthViewPaydayEvents,
-      dailyTargetSavings
-    );
+    // const depositEvents = calculateDepositEvents(
+    //   monthViewPaydayEvents,
+    //   allBillEvents,
+    //   allPaydayEvents
+    // );
 
-    if (depositEvents) {
-      // Add deposit events to monthViewEvents
-      depositEvents.map(depositEvent => {
-        const { date, deposit } = depositEvent;
+    // if (depositEvents) {
+    //   // Add deposit events to monthViewEvents
+    //   depositEvents.map(depositEvent => {
+    //     const { date, deposit } = depositEvent;
 
-        const index = monthViewEvents.findIndex(
-          monthViewEvent =>
-            monthViewEvent.date === date && monthViewEvent.type === "payday"
-        );
+    //     const index = monthViewEvents.findIndex(
+    //       monthViewEvent =>
+    //         monthViewEvent.date === date && monthViewEvent.type === "payday"
+    //     );
 
-        if (index !== -1) {
-          monthViewEvents[index].deposit = deposit;
-        }
+    //     if (index !== -1) {
+    //       monthViewEvents[index].deposit = deposit;
+    //     }
 
-        return depositEvent;
-      });
-    }
+    //     return depositEvent;
+    //   });
+    // }
 
     res.send({ monthViewEvents, dailyTargetSavings });
   } catch (e) {
@@ -105,59 +106,246 @@ const getCalendarEvents = async (req, res) => {
   }
 };
 
-const calculateDepositEvents = (monthViewPaydayEvents, dailyTargetSavings) => {
+const calculateDepositEvents = (
+  monthViewPaydayEvents,
+  allBillEvents,
+  allPaydayEvents
+) => {
   const depositEvents = [];
   monthViewPaydayEvents.forEach(monthViewPaydayEvent => {
     const { date: paydayDateString } = monthViewPaydayEvent;
+    const currentPaydayDate = new Date(paydayDateString);
 
-    // Find the target savings for the payday and the day before
-    const paydayTarget = dailyTargetSavings.find(
-      d => d.date === paydayDateString
-    );
-
-    const dayBefore = format(
-      subDays(new Date(paydayDateString), 1),
+    const dayBeforePaydayString = format(
+      subDays(currentPaydayDate, 1),
       "yyyy-MM-dd"
     );
-    const dayBeforeTarget = dailyTargetSavings.find(d => d.date === dayBefore);
-
-    if (!paydayTarget) return;
+    const dayBeforePaydayDate = subDays(currentPaydayDate, 1);
 
     const depositBreakdown = [];
 
-    paydayTarget.targetSavings.breakdown.forEach(paydayBill => {
-      const {
-        id,
-        name,
-        amount: newTargetAmount,
-        description,
-        nextBillOccurrenceDate,
-      } = paydayBill;
+    // Determine lastPayday and nextPayday for currentPaydayDate
+    let lastPaydayForCurrentPayday = null;
+    let nextPaydayForCurrentPayday = null;
+    for (const payday of allPaydayEvents) {
+      const paydayRule = payday.rrule;
+      const before = paydayRule.before(currentPaydayDate, true);
+      if (
+        before &&
+        (!lastPaydayForCurrentPayday || before > lastPaydayForCurrentPayday)
+      ) {
+        lastPaydayForCurrentPayday = before;
+      }
+      const after = paydayRule.after(currentPaydayDate);
+      if (
+        after &&
+        (!nextPaydayForCurrentPayday || after < nextPaydayForCurrentPayday)
+      ) {
+        nextPaydayForCurrentPayday = after;
+      }
+    }
 
-      const prevDayBill = dayBeforeTarget?.targetSavings.breakdown.find(
-        b => b.id === id
-      );
-      const oldTargetAmount = prevDayBill ? prevDayBill.amount : 0;
-      const oldNextBillDate = prevDayBill
-        ? prevDayBill.nextBillOccurrenceDate
-        : null;
+    // Determine lastPayday and nextPayday for dayBeforePaydayDate
+    let lastPaydayForDayBefore = null;
+    let nextPaydayForDayBefore = null;
+    for (const payday of allPaydayEvents) {
+      const paydayRule = payday.rrule;
+      const before = paydayRule.before(dayBeforePaydayDate, true);
+      if (
+        before &&
+        (!lastPaydayForDayBefore || before > lastPaydayForDayBefore)
+      ) {
+        lastPaydayForDayBefore = before;
+      }
+      const after = paydayRule.after(dayBeforePaydayDate);
+      if (
+        after &&
+        (!nextPaydayForDayBefore || after < nextPaydayForDayBefore)
+      ) {
+        nextPaydayForDayBefore = after;
+      }
+    }
+
+    // Iterate over all bills to calculate proportions for current payday and day before
+    allBillEvents.forEach(bill => {
+      const billRule = bill.rrule;
+      let newTargetAmount = 0;
+      let oldTargetAmount = 0;
+      let nextBillOccurrenceDate = null;
+      let oldNextBillDate = null;
+
+      // Calculate newTargetAmount (for current payday)
+      if (lastPaydayForCurrentPayday && nextPaydayForCurrentPayday) {
+        const paydayCycleStart = lastPaydayForCurrentPayday;
+        const paydayCycleEnd = nextPaydayForCurrentPayday;
+
+        const occurrencesInPaydayCycle = billRule.between(
+          paydayCycleStart,
+          paydayCycleEnd,
+          true
+        ).length;
+
+        if (occurrencesInPaydayCycle > 1) {
+          const remainingOccurrences = billRule.between(
+            addDays(currentPaydayDate, 1),
+            paydayCycleEnd,
+            true
+          );
+          newTargetAmount = bill.amount * remainingOccurrences.length;
+          nextBillOccurrenceDate = remainingOccurrences[0];
+        } else {
+          const currentBillOccurrence = billRule.between(
+            currentPaydayDate,
+            currentPaydayDate,
+            true
+          );
+          if (currentBillOccurrence.length > 0) {
+            newTargetAmount = bill.amount;
+            nextBillOccurrenceDate = currentBillOccurrence[0];
+          } else {
+            const nextOcc = billRule.after(currentPaydayDate);
+            if (nextOcc) {
+              let previousBillOccurrence = billRule.before(nextOcc);
+              let billCycleStartDate;
+              if (previousBillOccurrence) {
+                billCycleStartDate = addDays(previousBillOccurrence, 1);
+              } else {
+                billCycleStartDate = addDays(billRule.origOptions.dtstart, 1);
+              }
+
+              let totalPaydaysInBillCycle = 0;
+              for (const paydayEvent of allPaydayEvents) {
+                const paydayRule = paydayEvent.rrule;
+                totalPaydaysInBillCycle += paydayRule.between(
+                  billCycleStartDate,
+                  nextOcc,
+                  true
+                ).length;
+              }
+
+              let passedPaydaysInCycle = 0;
+              for (const paydayEvent of allPaydayEvents) {
+                const paydayRule = paydayEvent.rrule;
+                passedPaydaysInCycle += paydayRule.between(
+                  billCycleStartDate,
+                  currentPaydayDate,
+                  true
+                ).length;
+              }
+
+              if (totalPaydaysInBillCycle > 0) {
+                const proportion =
+                  passedPaydaysInCycle / totalPaydaysInBillCycle;
+                newTargetAmount = bill.amount * proportion;
+              }
+              nextBillOccurrenceDate = nextOcc;
+            }
+          }
+        }
+      }
+
+      // Calculate oldTargetAmount (for day before payday)
+      if (lastPaydayForDayBefore && nextPaydayForDayBefore) {
+        const paydayCycleStart = lastPaydayForDayBefore;
+        const paydayCycleEnd = nextPaydayForDayBefore;
+
+        const occurrencesInPaydayCycle = billRule.between(
+          paydayCycleStart,
+          paydayCycleEnd,
+          true
+        ).length;
+
+        if (occurrencesInPaydayCycle > 1) {
+          const remainingOccurrences = billRule.between(
+            addDays(dayBeforePaydayDate, 1),
+            paydayCycleEnd,
+            true
+          );
+          oldTargetAmount = bill.amount * remainingOccurrences.length;
+          oldNextBillDate = remainingOccurrences[0];
+        } else {
+          const currentBillOccurrence = billRule.between(
+            dayBeforePaydayDate,
+            dayBeforePaydayDate,
+            true
+          );
+          if (currentBillOccurrence.length > 0) {
+            oldTargetAmount = bill.amount;
+            oldNextBillDate = currentBillOccurrence[0];
+          } else {
+            const nextOcc = billRule.after(dayBeforePaydayDate);
+            if (nextOcc) {
+              let previousBillOccurrence = billRule.before(nextOcc);
+              let billCycleStartDate;
+              if (previousBillOccurrence) {
+                billCycleStartDate = addDays(previousBillOccurrence, 1);
+              } else {
+                billCycleStartDate = addDays(billRule.origOptions.dtstart, 1);
+              }
+
+              let totalPaydaysInBillCycle = 0;
+              for (const paydayEvent of allPaydayEvents) {
+                const paydayRule = paydayEvent.rrule;
+                totalPaydaysInBillCycle += paydayRule.between(
+                  billCycleStartDate,
+                  nextOcc,
+                  true
+                ).length;
+              }
+
+              let passedPaydaysInCycle = 0;
+              for (const paydayEvent of allPaydayEvents) {
+                const paydayRule = paydayEvent.rrule;
+                passedPaydaysInCycle += paydayRule.between(
+                  billCycleStartDate,
+                  dayBeforePaydayDate,
+                  true
+                ).length;
+              }
+
+              if (totalPaydaysInBillCycle > 0) {
+                const proportion =
+                  passedPaydaysInCycle / totalPaydaysInBillCycle;
+                oldTargetAmount = bill.amount * proportion;
+              }
+              oldNextBillDate = nextOcc;
+            }
+          }
+        }
+      }
 
       let amountToDeposit = 0;
-      if (nextBillOccurrenceDate?.getTime() === oldNextBillDate?.getTime()) {
-        // NORMAL CASE: Target is for the same upcoming bill, so deposit is the difference.
+      const isBillDueOnPayday =
+        nextBillOccurrenceDate &&
+        format(nextBillOccurrenceDate, "yyyy-MM-dd") === paydayDateString;
+      const hasBillCycleRolledOver =
+        nextBillOccurrenceDate?.getTime() !== oldNextBillDate?.getTime();
+
+      if (isBillDueOnPayday) {
         amountToDeposit = newTargetAmount - oldTargetAmount;
-      } else {
-        // BOUNDARY CASE: The bill cycle has rolled over. The deposit is the full new target amount.
+      } else if (hasBillCycleRolledOver) {
         amountToDeposit = newTargetAmount;
+      } else {
+        amountToDeposit = newTargetAmount - oldTargetAmount;
       }
 
       if (amountToDeposit > 0) {
         depositBreakdown.push({
-          name: name,
+          name: bill.name,
           amount: amountToDeposit,
-          id: id,
-          description: description,
+          id: bill.id,
+          description: bill.description,
         });
+      }
+      if (bill.name === "Rent" && paydayDateString === "2025-09-15") {
+        console.log(`-- ${bill.name} ${paydayDateString} --`);
+        console.log(`newTargetAmount = ${newTargetAmount}`);
+        console.log(`oldTargetAmount = ${oldTargetAmount}`);
+        console.log(`amountToDeposit = ${amountToDeposit}`);
+        console.log(`isBillDueOnPayday = ${isBillDueOnPayday}`);
+        console.log(`hasBillCycleRolledOver = ${hasBillCycleRolledOver}`);
+        console.log(`nextBillOccurrenceDate = ${nextBillOccurrenceDate}`);
+        console.log(`oldNextBillDate = ${oldNextBillDate}`);
       }
     });
 
@@ -208,6 +396,13 @@ const calculateDailyTargetSavings = (
       }
     }
 
+    if (dateStr === "2025-09-15") {
+      console.log(`-- ${dateStr} --`);
+      console.log(`lastPayday = ${lastPayday}`);
+      console.log(`nextPayday = ${nextPayday}`);
+      console.log(`-- -- `);
+    }
+
     for (const bill of allBillEvents) {
       const billRule = bill.rrule;
       let billProportion = 0;
@@ -215,13 +410,18 @@ const calculateDailyTargetSavings = (
 
       if (lastPayday && nextPayday) {
         const paydayCycleStart = lastPayday;
-        const paydayCycleEnd = subDays(nextPayday, 1);
+        const paydayCycleEnd = nextPayday;
 
         const occurrencesInPaydayCycle = billRule.between(
-          paydayCycleStart,
+          addDays(paydayCycleStart, 1),
           paydayCycleEnd,
           true
         ).length;
+
+        if (dateStr === "2025-09-15" && bill.name === "Rent") {
+          console.log(`-- ${dateStr} ${bill.name} --`);
+          console.log(`occurrencesInPaydayCycle = ${occurrencesInPaydayCycle}`);
+        }
 
         if (occurrencesInPaydayCycle > 1) {
           const remainingOccurrences = billRule.between(
@@ -234,34 +434,49 @@ const calculateDailyTargetSavings = (
         } else {
           nextBillOccurrence = billRule.after(currentDay);
           if (nextBillOccurrence) {
-            let billCycleStartDate = billRule.before(nextBillOccurrence);
-            if (!billCycleStartDate) {
-              billCycleStartDate = billRule.origOptions.dtstart;
+            let previousBillOccurrence = billRule.before(nextBillOccurrence);
+            let billCycleStartDate;
+            if (previousBillOccurrence) {
+              billCycleStartDate = addDays(previousBillOccurrence, 1);
+            } else {
+              billCycleStartDate = addDays(billRule.origOptions.dtstart, 1);
             }
 
-            let totalPaydaysInBillCycle = 0;
+            const uniqueTotalPaydays = new Set();
             for (const paydayEvent of allPaydayEvents) {
               const paydayRule = paydayEvent.rrule;
-              totalPaydaysInBillCycle += paydayRule.between(
-                billCycleStartDate,
-                subDays(nextBillOccurrence, 1),
-                true
-              ).length;
+              paydayRule
+                .between(billCycleStartDate, nextBillOccurrence, true)
+                .forEach(date =>
+                  uniqueTotalPaydays.add(format(date, "yyyy-MM-dd"))
+                );
             }
+            const totalPaydaysInBillCycle = uniqueTotalPaydays.size;
 
-            let passedPaydaysInCycle = 0;
+            const uniquePassedPaydays = new Set();
             for (const paydayEvent of allPaydayEvents) {
               const paydayRule = paydayEvent.rrule;
-              passedPaydaysInCycle += paydayRule.between(
-                billCycleStartDate,
-                currentDay,
-                true
-              ).length;
+              paydayRule
+                .between(billCycleStartDate, currentDay, true)
+                .forEach(date =>
+                  uniquePassedPaydays.add(format(date, "yyyy-MM-dd"))
+                );
             }
+            const passedPaydaysInCycle = uniquePassedPaydays.size;
 
             if (totalPaydaysInBillCycle > 0) {
               const proportion = passedPaydaysInCycle / totalPaydaysInBillCycle;
               billProportion = bill.amount * proportion;
+            }
+
+            if (dateStr === "2025-09-15" && bill.name === "Rent") {
+              console.log(`-- ${dateStr} --`);
+              console.log(`billProportion = ${billProportion}`);
+              console.log(
+                `totalPaydaysInBillCycle = ${totalPaydaysInBillCycle}`
+              );
+              console.log(`nextBillOccurrence = ${nextBillOccurrence}`);
+              console.log(`-- -- `);
             }
           }
         }

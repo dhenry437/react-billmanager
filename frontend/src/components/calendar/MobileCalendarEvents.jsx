@@ -47,5 +47,5 @@ export default function MobileCalendarEvents(props) {
 MobileCalendarEvents.propTypes = {
   events: PropTypes.array.isRequired,
   getEventColour: PropTypes.func.isRequired,
-  targetSavings: PropTypes.object.isRequired,
+  targetSavings: PropTypes.object,
 };

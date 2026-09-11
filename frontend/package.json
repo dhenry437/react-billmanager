@@ -20,7 +20,7 @@
     "react-dom": "^18.3.1",
     "react-google-recaptcha-v3": "^1.10.1",
     "react-jdenticon": "^1.2.0",
-    "react-router-dom": "^6.25.1"
+    "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",

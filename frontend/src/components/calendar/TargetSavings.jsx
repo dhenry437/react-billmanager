@@ -11,11 +11,13 @@ export default function TargetSavings(props) {
   return (
     <>
       <Link
-        onClick={event => {
+        onClick={(event) => {
           event.stopPropagation();
           setBreakdownModalOpen(true);
         }}
-        className="text-gray-400 font-normal">
+        className="inline-flex items-center rounded-md bg-gray-50 hover:bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
+        href="#"
+      >
         ${parseFloat(amount?.toFixed(2))}
       </Link>
 
