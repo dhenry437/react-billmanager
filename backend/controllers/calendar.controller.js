@@ -13,13 +13,24 @@ const getCalendarEvents = async (req, res) => {
 
     // Keep only required properties
     events = events.map(
-      ({ id, name, description, amount, type, rruleString }) => ({
+      ({
         id,
         name,
         description,
         amount,
         type,
         rruleString,
+        reactState,
+        createdAt,
+      }) => ({
+        id,
+        name,
+        description,
+        amount,
+        type,
+        rruleString,
+        reactState,
+        createdAt,
       })
     );
 
@@ -434,9 +445,19 @@ const calculateDailyTargetSavings = (
         } else {
           nextBillOccurrence = billRule.after(currentDay);
           if (nextBillOccurrence) {
+            const isRecurring =
+              bill.reactState?.recurring !== false &&
+              billRule.origOptions.count !== 1;
             let previousBillOccurrence = billRule.before(nextBillOccurrence);
             let billCycleStartDate;
-            if (previousBillOccurrence) {
+            if (!isRecurring) {
+              billCycleStartDate = startOfDay(
+                new Date(bill.createdAt || billRule.origOptions.dtstart)
+              );
+              if (billCycleStartDate > nextBillOccurrence) {
+                billCycleStartDate = nextBillOccurrence;
+              }
+            } else if (previousBillOccurrence) {
               billCycleStartDate = addDays(previousBillOccurrence, 1);
             } else {
               billCycleStartDate = addDays(billRule.origOptions.dtstart, 1);
@@ -467,6 +488,8 @@ const calculateDailyTargetSavings = (
             if (totalPaydaysInBillCycle > 0) {
               const proportion = passedPaydaysInCycle / totalPaydaysInBillCycle;
               billProportion = bill.amount * proportion;
+            } else if (!isRecurring) {
+              billProportion = bill.amount;
             }
 
             if (dateStr === "2025-09-15" && bill.name === "Rent") {
@@ -512,4 +535,5 @@ const calculateDailyTargetSavings = (
 
 module.exports = {
   getCalendarEvents,
+  calculateDailyTargetSavings,
 };

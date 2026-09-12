@@ -8,6 +8,29 @@ import Spinner from "./Spinner";
 import Alert from "./Alert";
 import { useNavigate, useParams } from "react-router-dom";
 
+const getInitialFields = () => ({
+  name: "",
+  amount: "",
+  description: "",
+  date: format(new Date(), "yyyy-MM-dd"),
+  recurring: true,
+  recurringN: "1",
+  recurringFrequency: "weeks",
+  recurringDays: [
+    { name: "sun", selected: false },
+    { name: "mon", selected: false },
+    { name: "tue", selected: false },
+    { name: "wed", selected: false },
+    { name: "thu", selected: false },
+    { name: "fri", selected: false },
+    { name: "sat", selected: false },
+  ],
+  recurringMonthly: "nth",
+  recurringEnds: "never",
+  recurringEndsOnDate: format(new Date(), "yyyy-MM-dd"),
+  recurringEndsAfterN: "5",
+});
+
 export const EventForm = () => {
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
 
@@ -16,28 +39,7 @@ export const EventForm = () => {
 
   const [alerts, setAlerts] = useState({ form: null });
   const [loading, setLoading] = useState({ form: false });
-  const [fields, setFields] = useState({
-    name: "",
-    amount: "0",
-    description: "",
-    date: format(new Date(), "yyyy-MM-dd"),
-    recurring: true,
-    recurringN: "1",
-    recurringFrequency: "weeks",
-    recurringDays: [
-      { name: "sun", selected: false },
-      { name: "mon", selected: false },
-      { name: "tue", selected: false },
-      { name: "wed", selected: false },
-      { name: "thu", selected: false },
-      { name: "fri", selected: false },
-      { name: "sat", selected: false },
-    ],
-    recurringMonthly: "nth",
-    recurringEnds: "never",
-    recurringEndsOnDate: format(new Date(), "yyyy-MM-dd"),
-    recurringEndsAfterN: "5",
-  });
+  const [fields, setFields] = useState(getInitialFields);
 
   const fetchEventCallback = useCallback(
     async eventId => {
@@ -86,6 +88,10 @@ export const EventForm = () => {
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });
+
+      if (!eventId) {
+        setFields(getInitialFields());
+      }
 
       if (response.data.alert) {
         // Scroll to top to show alert
@@ -165,7 +171,7 @@ export const EventForm = () => {
                 id="amount"
                 value={fields.amount}
                 onChange={handleInputChange}
-                min={0}
+                min={0.01}
                 className="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 placeholder="0.00"
                 step={0.01}

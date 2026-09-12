@@ -11,7 +11,7 @@ const { titleCase } = require("../util");
 const { RRule } = require("rrule");
 
 const createEventSchema = z.object({
-  amount: z.coerce.number().gt(0),
+  amount: z.coerce.number().gt(0, { message: "Amount must be greater than $0" }),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   description: z.string().optional(),
   name: z.string(),
@@ -38,19 +38,17 @@ const createEvent = async (req, res) => {
 
   if (zodResult.success) {
     let rule = null;
-    if (req.body.recurring) {
-      try {
-        rule = createRRule(req.body);
-      } catch (e) {
-        console.log(e);
-        return res.status(500).send({
-          alert: {
-            type: "danger",
-            heading: "RRule error",
-            message: "Check Node logs",
-          },
-        });
-      }
+    try {
+      rule = createRRule(req.body);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({
+        alert: {
+          type: "danger",
+          heading: "RRule error",
+          message: "Check Node logs",
+        },
+      });
     }
 
     try {
@@ -75,6 +73,10 @@ const createEvent = async (req, res) => {
               text: `View all ${req.body.type}s`,
               href: `/${req.body.type}s`,
             },
+            {
+              text: "Dashboard",
+              href: "/",
+            },
           ],
         },
       });
@@ -93,7 +95,7 @@ const createEvent = async (req, res) => {
       alert: {
         type: "danger",
         message: "Please address the following:",
-        list: result.errors.issues.map(x => x.message),
+        list: zodResult.error.issues.map(x => x.message),
       },
     });
   }
@@ -118,19 +120,17 @@ const updateEvent = async (req, res) => {
 
   if (zodResult.success) {
     let rule = null;
-    if (req.body.recurring) {
-      try {
-        rule = createRRule(req.body);
-      } catch (e) {
-        console.log(e);
-        return res.status(500).send({
-          alert: {
-            type: "danger",
-            heading: "RRule error",
-            message: "Check Node logs",
-          },
-        });
-      }
+    try {
+      rule = createRRule(req.body);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({
+        alert: {
+          type: "danger",
+          heading: "RRule error",
+          message: "Check Node logs",
+        },
+      });
     }
 
     try {
@@ -155,6 +155,10 @@ const updateEvent = async (req, res) => {
               text: `View all ${req.body.type}s`,
               href: `/${req.body.type}s`,
             },
+            {
+              text: "Dashboard",
+              href: "/",
+            },
           ],
         },
       });
@@ -173,7 +177,7 @@ const updateEvent = async (req, res) => {
       alert: {
         type: "danger",
         message: "Please address the following:",
-        list: result.errors.issues.map(x => x.message),
+        list: zodResult.error.issues.map(x => x.message),
       },
     });
   }
@@ -197,7 +201,10 @@ const getEventsCurrentUser = async (req, res) => {
       return res.send({
         events: events.map(x => ({
           ...x,
-          recurring: RRule.fromString(x.rruleString).toText(),
+          recurring:
+            x.reactState?.recurring === false
+              ? "One-off"
+              : RRule.fromString(x.rruleString).toText(),
         })),
       });
     } catch (e) {
@@ -213,7 +220,7 @@ const getEventsCurrentUser = async (req, res) => {
   } else {
     const {
       error: { issues },
-    } = result;
+    } = zodResult;
 
     return res.status(400).send({
       alert: {

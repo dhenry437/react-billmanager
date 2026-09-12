@@ -2,6 +2,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import BreakdownModal from "./BreakdownModal";
 import { Link } from "react-router-dom";
+import { formatCurrency } from "../../util";
 
 export default function TargetSavings(props) {
   const { targetSavings } = props;
@@ -18,7 +19,7 @@ export default function TargetSavings(props) {
         className="inline-flex items-center rounded-md bg-gray-50 hover:bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
         href="#"
       >
-        ${parseFloat(amount?.toFixed(2))}
+        {formatCurrency(amount)}
       </Link>
 
       <BreakdownModal

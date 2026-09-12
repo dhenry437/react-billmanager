@@ -171,5 +171,47 @@ describe("calendar.controller.js", () => {
         result.find(d => d.date === "2025-09-24").targetSavings.breakdown
       ).not.toContainEqual(expect.objectContaining({ name: "Hello Fresh" }));
     });
+
+    it("should calculate target savings for a non-recurring bill across paydays", () => {
+      const oneOffBill = {
+        id: "one-off-1",
+        name: "Doctor Specialist",
+        description: "Specialist consultation",
+        amount: 300,
+        type: "bill",
+        createdAt: "2025-09-10T00:00:00.000Z",
+        rruleString: "DTSTART:20250928T000000Z\nRRULE:FREQ=DAILY;COUNT=1",
+        rrule: RRule.fromString(
+          "DTSTART:20250928T000000Z\nRRULE:FREQ=DAILY;COUNT=1"
+        ),
+        reactState: { recurring: false },
+      };
+
+      const testResult = calculateDailyTargetSavings(
+        monthViewDates,
+        [oneOffBill],
+        allPaydayEvents
+      );
+
+      // On 2025-09-11 (before any payday after Sept 10): 0 passed out of 3 paydays (Sept 12, 15, 26)
+      expect(
+        testResult.find(d => d.date === "2025-09-11").targetSavings.amount
+      ).toBe(0);
+
+      // On 2025-09-13 (after 1 payday: Sept 12): 1/3 * 300 = 100
+      expect(
+        testResult.find(d => d.date === "2025-09-13").targetSavings.amount
+      ).toBe(100);
+
+      // On 2025-09-16 (after 2 paydays: Sept 12, 15): 2/3 * 300 = 200
+      expect(
+        testResult.find(d => d.date === "2025-09-16").targetSavings.amount
+      ).toBe(200);
+
+      // On 2025-09-27 (after 3 paydays: Sept 12, 15, 26): 3/3 * 300 = 300
+      expect(
+        testResult.find(d => d.date === "2025-09-27").targetSavings.amount
+      ).toBe(300);
+    });
   });
 });

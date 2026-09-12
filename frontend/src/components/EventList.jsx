@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { sentenceCase, titleCase } from "../util";
+import { formatCurrency, sentenceCase, titleCase } from "../util";
 import Spinner from "./Spinner";
 import { useCallback, useEffect, useState } from "react";
 import { deleteEventById, getEventsCurrentUser } from "../data/repository";
@@ -131,7 +131,7 @@ export default function EventList() {
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {tableData?.map(row => (
-                <tr key={row.amount}>
+                <tr key={row.id}>
                   <td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:w-auto sm:max-w-none sm:pl-0">
                     {row.name}
                     <dl className="font-normal lg:hidden">
@@ -141,7 +141,7 @@ export default function EventList() {
                       </dd>
                       <dt className="sr-only sm:hidden">Amount</dt>
                       <dd className="mt-1 truncate text-gray-500 sm:hidden">
-                        ${row.amount}
+                        {formatCurrency(row.amount)}
                       </dd>
                     </dl>
                   </td>
@@ -149,7 +149,7 @@ export default function EventList() {
                     {row.description}
                   </td>
                   <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">
-                    ${row.amount}
+                    {formatCurrency(row.amount)}
                   </td>
                   <td className="px-3 py-4 text-sm text-gray-500">
                     {sentenceCase(row.recurring)}

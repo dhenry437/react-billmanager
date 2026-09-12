@@ -26,6 +26,7 @@ const weekdayDictionary = {
 const createRRule = fields => {
   const {
     date,
+    recurring,
     recurringDays,
     recurringEnds,
     recurringEndsAfterN,
@@ -34,6 +35,14 @@ const createRRule = fields => {
     recurringMonthly,
     recurringN,
   } = fields;
+
+  if (recurring === false) {
+    return new RRule({
+      dtstart: new Date(date),
+      freq: RRule.DAILY,
+      count: 1,
+    });
+  }
 
   let count = null;
   let until = null;
@@ -99,6 +108,7 @@ const getEventsFromDb = async (userId, search) => {
       "rruleString",
       "reactState",
       "type",
+      "createdAt",
     ],
     raw: true,
   });

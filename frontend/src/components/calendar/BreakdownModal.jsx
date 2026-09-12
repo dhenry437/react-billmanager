@@ -8,6 +8,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { Link } from "react-router-dom";
+import { formatCurrency } from "../../util";
 
 export default function BreakdownModal(props) {
   const { breakdownModalOpen, setBreakdownModalOpen, breakdown } = props;
@@ -50,52 +51,63 @@ export default function BreakdownModal(props) {
                   </button>
                 </div>
                 <div className="py-2 flow-root px-3">
-                  <ul role="list" className="-mb-8">
-                    {breakdown.map((breakdownItem, i) => {
-                      const { name, amount, id, description } = breakdownItem;
+                  {breakdown && breakdown.length > 0 ? (
+                    <ul role="list" className="-mb-8">
+                      {breakdown.map((breakdownItem, i) => {
+                        const { name, amount, id, description } = breakdownItem;
 
-                      return (
-                        <li key={i}>
-                          <Link to={`/bills/${id}`}>
-                            <div className="relative pb-8">
-                              {i !== breakdown.length - 1 ? (
-                                <span
-                                  className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200"
-                                  aria-hidden="true"
-                                />
-                              ) : null}
-                              <div className="relative flex space-x-3">
-                                <div>
-                                  <span className="bg-red-500 h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white">
-                                    <CurrencyDollarIcon
-                                      className="h-5 w-5 text-white"
-                                      aria-hidden="true"
-                                    />
-                                  </span>
-                                </div>
-                                <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                        return (
+                          <li key={i}>
+                            <Link to={`/bills/${id}`}>
+                              <div className="relative pb-8">
+                                {i !== breakdown.length - 1 ? (
+                                  <span
+                                    className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200"
+                                    aria-hidden="true"
+                                  />
+                                ) : null}
+                                <div className="relative flex space-x-3">
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {name}
-                                      {"  "}
-                                      <span className="font-normal text-gray-500">
-                                        {description}
-                                      </span>
-                                    </p>
-                                  </div>
-                                  <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                                    <span>
-                                      ${parseFloat(amount.toFixed(2))}
+                                    <span className="bg-red-500 h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white">
+                                      <CurrencyDollarIcon
+                                        className="h-5 w-5 text-white"
+                                        aria-hidden="true"
+                                      />
                                     </span>
+                                  </div>
+                                  <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-900">
+                                        {name}
+                                        {"  "}
+                                        <span className="font-normal text-gray-500">
+                                          {description}
+                                        </span>
+                                      </p>
+                                    </div>
+                                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                                      <span>
+                                        {formatCurrency(amount)}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <div className="py-6 text-center text-sm text-gray-500">
+                      <p className="font-medium text-gray-900">
+                        No bill contributions needed today
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Target savings are split across paydays leading up to each bill&apos;s due date. Make sure your paydays are added to calculate savings.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-5 sm:mt-6">
                   <button
@@ -117,5 +129,5 @@ export default function BreakdownModal(props) {
 BreakdownModal.propTypes = {
   breakdownModalOpen: PropTypes.bool.isRequired,
   setBreakdownModalOpen: PropTypes.func.isRequired,
-  breakdown: PropTypes.array.isRequired,
+  breakdown: PropTypes.array,
 };

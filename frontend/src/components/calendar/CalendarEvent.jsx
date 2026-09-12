@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import BreakdownModal from "./BreakdownModal";
 import { useState } from "react";
+import { formatCurrency } from "../../util";
 
 export default function CalendarEvent(props) {
   const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function CalendarEvent(props) {
       <div className="ml-1.5 w-0 flex-grow truncate text-left">
         <span className="truncate">{name}</span>
       </div>
-      <div className="ml-2 flex-shrink-0">${parseFloat(amount.toFixed(2))}</div>
+      <div className="ml-2 flex-shrink-0">{formatCurrency(amount)}</div>
     </div>
   );
 

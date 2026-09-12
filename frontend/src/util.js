@@ -34,3 +34,13 @@ export const getOrdinalWeekdayOfMonth = date => {
     ? "last"
     : ordinalSuffix(nWeeksDiff + 1);
 };
+
+export const formatCurrency = amount => {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return "$-.--";
+  }
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+  }).format(amount);
+};
