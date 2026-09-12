@@ -47,7 +47,11 @@ const getCalendarEvents = async (req, res) => {
     events = events.map(x => ({
       ...x,
       occurrences: x.rrule
-        .between(new Date(monthViewDates[0]), new Date(monthViewDates.at(-1)))
+        .between(
+          startOfDay(new Date(monthViewDates[0])),
+          new Date(`${monthViewDates.at(-1)}T23:59:59.999Z`),
+          true
+        )
         .flat(),
     }));
 

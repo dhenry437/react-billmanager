@@ -149,6 +149,7 @@ export const EventForm = () => {
                 onChange={handleInputChange}
                 type="text"
                 autoComplete="off"
+                maxLength={100}
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
@@ -200,7 +201,7 @@ export const EventForm = () => {
 
           <div className="col-span-full">
             <label
-              htmlFor="description"
+              htmlFor="date"
               className="block text-sm font-medium leading-6 text-gray-900">
               {fields.recurring ? "Start date" : "Date"}
             </label>
@@ -291,7 +292,7 @@ export const EventForm = () => {
                       <div className="relative flex items-start">
                         <div className="flex h-6 items-center">
                           <input
-                            id="recurringMonthly"
+                            id="recurringMonthlyNth"
                             name="recurringMonthly"
                             value="nth"
                             onChange={handleInputChange}
@@ -302,7 +303,7 @@ export const EventForm = () => {
                         </div>
                         <div className="ml-3 text-sm leading-6">
                           <label
-                            htmlFor="recurringMonthly"
+                            htmlFor="recurringMonthlyNth"
                             className="flex items-center font-medium text-gray-900">
                             Monthly on the{" "}
                             {`${getOrdinalWeekdayOfMonth(fields.date)} ${format(
@@ -315,7 +316,7 @@ export const EventForm = () => {
                       <div className="relative flex items-start">
                         <div className="flex h-6 items-center">
                           <input
-                            id="recurringMonthly"
+                            id="recurringMonthlyDate"
                             name="recurringMonthly"
                             value="date"
                             onChange={handleInputChange}
@@ -326,7 +327,7 @@ export const EventForm = () => {
                         </div>
                         <div className="ml-3 text-sm leading-6">
                           <label
-                            htmlFor="recurringMonthly"
+                            htmlFor="recurringMonthlyDate"
                             className="font-medium text-gray-900">
                             Monthly on the {format(fields.date, "do")}
                           </label>
@@ -424,7 +425,7 @@ export const EventForm = () => {
                             id="endsAfterN"
                             value={fields.recurringEndsAfterN}
                             onChange={handleInputChange}
-                            min={1}
+                            min={fields.recurringEnds === "after" ? 1 : undefined}
                             className="block w-full rounded-md border-0 py-1.5 sm:pr-[98px] text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             required={fields.recurringEnds === "after"}
                           />
@@ -442,22 +443,23 @@ export const EventForm = () => {
                   </div>
                 </fieldset>
               </div>
-              <div className="col-span-full">
-                <button
-                  type="submit"
-                  className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                  {loading.form ? (
-                    <>
-                      <Spinner />
-                      Loading...
-                    </>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-              </div>
             </>
           )}
+
+          <div className="col-span-full">
+            <button
+              type="submit"
+              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+              {loading.form ? (
+                <>
+                  <Spinner />
+                  Loading...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

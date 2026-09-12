@@ -132,11 +132,13 @@ export default function EventList() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {tableData?.map(row => (
                 <tr key={row.id}>
-                  <td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:w-auto sm:max-w-none sm:pl-0">
-                    {row.name}
+                  <td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:w-auto sm:max-w-xs sm:pl-0">
+                    <div className="truncate font-medium text-gray-900 max-w-[200px] sm:max-w-xs md:max-w-sm" title={row.name}>
+                      {row.name}
+                    </div>
                     <dl className="font-normal lg:hidden">
                       <dt className="sr-only">Description</dt>
-                      <dd className="mt-1 truncate text-gray-700">
+                      <dd className="mt-1 truncate text-gray-700" title={row.description}>
                         {row.description}
                       </dd>
                       <dt className="sr-only sm:hidden">Amount</dt>
@@ -145,7 +147,7 @@ export default function EventList() {
                       </dd>
                     </dl>
                   </td>
-                  <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                  <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell max-w-xs truncate" title={row.description}>
                     {row.description}
                   </td>
                   <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">

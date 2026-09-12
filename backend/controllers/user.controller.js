@@ -19,7 +19,9 @@ const createUser = async (req, res) => {
           },
           { message: "Email is in use", path: ["email"] }
         ),
-      password: z.string(),
+      password: z
+        .string()
+        .min(8, { message: "Password must be at least 8 characters" }),
       confirmPassword: z.string(),
       token: z.string(),
     })

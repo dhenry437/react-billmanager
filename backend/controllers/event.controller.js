@@ -10,26 +10,35 @@ const {
 const { titleCase } = require("../util");
 const { RRule } = require("rrule");
 
-const createEventSchema = z.object({
-  amount: z.coerce.number().gt(0, { message: "Amount must be greater than $0" }),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().optional(),
-  name: z.string(),
-  recurring: z.boolean(),
-  recurringDays: z.array(
-    z.object({
-      name: z.enum(["sun", "mon", "tue", "wed", "thu", "fri", "sat"]),
-      selected: z.boolean(),
-    })
-  ),
-  recurringEnds: z.enum(["never", "on", "after"]),
-  recurringEndsAfterN: z.coerce.number().gt(0),
-  recurringEndsOnDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  recurringFrequency: z.enum(["days", "weeks", "months", "years"]),
-  recurringMonthly: z.enum(["nth", "date"]),
-  recurringN: z.coerce.number().gt(0),
-  type: z.enum(["bill", "payday"]),
-});
+const createEventSchema = z
+  .object({
+    amount: z.coerce.number().gt(0, { message: "Amount must be greater than $0" }),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    description: z.string().optional(),
+    name: z.string().max(100),
+    recurring: z.boolean(),
+    recurringDays: z.array(
+      z.object({
+        name: z.enum(["sun", "mon", "tue", "wed", "thu", "fri", "sat"]),
+        selected: z.boolean(),
+      })
+    ),
+    recurringEnds: z.enum(["never", "on", "after"]),
+    recurringEndsAfterN: z.coerce.number().min(0),
+    recurringEndsOnDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    recurringFrequency: z.enum(["days", "weeks", "months", "years"]),
+    recurringMonthly: z.enum(["nth", "date"]),
+    recurringN: z.coerce.number().gt(0),
+    type: z.enum(["bill", "payday"]),
+  })
+  .refine(
+    data =>
+      data.recurringEnds !== "after" || data.recurringEndsAfterN > 0,
+    {
+      message: "Occurrences must be greater than 0",
+      path: ["recurringEndsAfterN"],
+    }
+  );
 
 const createEvent = async (req, res) => {
   const zodResult = await createEventSchema.safeParseAsync(req.body);
