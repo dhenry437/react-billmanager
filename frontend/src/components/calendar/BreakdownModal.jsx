@@ -1,7 +1,9 @@
 import PropTypes from "prop-types";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useRef, useEffect } from "react";
 import {
   CalculatorIcon,
+  CheckIcon,
+  ClipboardDocumentIcon,
   CurrencyDollarIcon,
   XMarkIcon,
 } from "@heroicons/react/20/solid";
@@ -19,6 +21,17 @@ export default function BreakdownModal(props) {
 
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [currentBalance, setCurrentBalance] = useState("");
+  const [copied, setCopied] = useState(false);
+  const balanceInputRef = useRef(null);
+
+  useEffect(() => {
+    if (calculatorOpen) {
+      const frame = requestAnimationFrame(() => {
+        balanceInputRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [calculatorOpen]);
 
   const totalTarget = breakdown
     ? breakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
@@ -27,6 +40,14 @@ export default function BreakdownModal(props) {
   const balanceNum = parseFloat(currentBalance);
   const hasValidBalance = !isNaN(balanceNum) && currentBalance.trim() !== "";
   const difference = hasValidBalance ? totalTarget - balanceNum : null;
+
+  const handleCopyAmount = () => {
+    if (difference === null) return;
+    const valueToCopy = Math.abs(difference).toFixed(2);
+    navigator.clipboard.writeText(valueToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   return (
     <Transition show={breakdownModalOpen} as={Fragment}>
@@ -159,6 +180,7 @@ export default function BreakdownModal(props) {
                         <span className="text-gray-500 sm:text-sm">$</span>
                       </div>
                       <input
+                        ref={balanceInputRef}
                         type="number"
                         step="0.01"
                         id="currentBalance"
@@ -172,23 +194,66 @@ export default function BreakdownModal(props) {
 
                     <div className="mt-2 text-sm">
                       {hasValidBalance ? (
-                        difference > 0 ? (
-                          <div className="flex items-center justify-between text-indigo-700 font-medium">
-                            <span>Deposit needed:</span>
-                            <span className="text-sm font-semibold">
-                              {formatCurrency(difference)}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between text-emerald-700 font-medium">
-                            <span>Target covered:</span>
-                            <span className="text-sm font-semibold">
-                              {difference === 0
-                                ? "Exact target"
-                                : `+${formatCurrency(Math.abs(difference))} surplus`}
-                            </span>
-                          </div>
-                        )
+                        <button
+                          type="button"
+                          onClick={handleCopyAmount}
+                          title="Click to copy amount"
+                          className="group w-full flex items-center justify-between p-1.5 -mx-1.5 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors text-left"
+                        >
+                          {difference > 0 ? (
+                            <>
+                              <span className="text-indigo-700 font-medium">
+                                Deposit needed:
+                              </span>
+                              <span className="flex items-center gap-1.5 text-sm font-semibold text-indigo-700">
+                                {formatCurrency(difference)}
+                                <span className="relative inline-flex h-4 w-4 items-center justify-center shrink-0">
+                                  <ClipboardDocumentIcon
+                                    className={`h-4 w-4 transition-all duration-200 transform text-gray-400 group-hover:text-indigo-600 ${
+                                      copied
+                                        ? "opacity-0 scale-50 -rotate-45 pointer-events-none"
+                                        : "opacity-100 scale-100 rotate-0"
+                                    }`}
+                                  />
+                                  <CheckIcon
+                                    className={`absolute inset-0 h-4 w-4 text-emerald-600 transition-all duration-200 transform ${
+                                      copied
+                                        ? "opacity-100 scale-100 rotate-0"
+                                        : "opacity-0 scale-50 rotate-45 pointer-events-none"
+                                    }`}
+                                  />
+                                </span>
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-emerald-700 font-medium">
+                                Target covered:
+                              </span>
+                              <span className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                                {difference === 0
+                                  ? "Exact target"
+                                  : `+${formatCurrency(Math.abs(difference))} surplus`}
+                                <span className="relative inline-flex h-4 w-4 items-center justify-center shrink-0">
+                                  <ClipboardDocumentIcon
+                                    className={`h-4 w-4 transition-all duration-200 transform text-gray-400 group-hover:text-emerald-600 ${
+                                      copied
+                                        ? "opacity-0 scale-50 -rotate-45 pointer-events-none"
+                                        : "opacity-100 scale-100 rotate-0"
+                                    }`}
+                                  />
+                                  <CheckIcon
+                                    className={`absolute inset-0 h-4 w-4 text-emerald-600 transition-all duration-200 transform ${
+                                      copied
+                                        ? "opacity-100 scale-100 rotate-0"
+                                        : "opacity-0 scale-50 rotate-45 pointer-events-none"
+                                    }`}
+                                  />
+                                </span>
+                              </span>
+                            </>
+                          )}
+                        </button>
                       ) : (
                         <p className="text-gray-400 italic text-right">
                           Enter balance to calculate deposit
