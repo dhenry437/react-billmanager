@@ -1,6 +1,10 @@
 import PropTypes from "prop-types";
-import { Fragment } from "react";
-import { CurrencyDollarIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { Fragment, useState } from "react";
+import {
+  CalculatorIcon,
+  CurrencyDollarIcon,
+  XMarkIcon,
+} from "@heroicons/react/20/solid";
 import {
   Dialog,
   DialogPanel,
@@ -13,12 +17,24 @@ import { formatCurrency } from "../../util";
 export default function BreakdownModal(props) {
   const { breakdownModalOpen, setBreakdownModalOpen, breakdown } = props;
 
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [currentBalance, setCurrentBalance] = useState("");
+
+  const totalTarget = breakdown
+    ? breakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+    : 0;
+
+  const balanceNum = parseFloat(currentBalance);
+  const hasValidBalance = !isNaN(balanceNum) && currentBalance.trim() !== "";
+  const difference = hasValidBalance ? totalTarget - balanceNum : null;
+
   return (
     <Transition show={breakdownModalOpen} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
-        onClose={setBreakdownModalOpen}>
+        onClose={setBreakdownModalOpen}
+      >
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -26,7 +42,8 @@ export default function BreakdownModal(props) {
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
-          leaveTo="opacity-0">
+          leaveTo="opacity-0"
+        >
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity" />
         </TransitionChild>
 
@@ -39,13 +56,15 @@ export default function BreakdownModal(props) {
               enterTo="opacity-100 translate-y-0 sm:scale-100"
               leave="ease-in duration-200"
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
               <DialogPanel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full max-w-fit sm:p-6 sm:pt-9">
                 <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
                     type="button"
                     className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={() => setBreakdownModalOpen(false)}>
+                    onClick={() => setBreakdownModalOpen(false)}
+                  >
                     <span className="sr-only">Close</span>
                     <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
@@ -86,9 +105,7 @@ export default function BreakdownModal(props) {
                                       </p>
                                     </div>
                                     <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                                      <span>
-                                        {formatCurrency(amount)}
-                                      </span>
+                                      <span>{formatCurrency(amount)}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -104,17 +121,105 @@ export default function BreakdownModal(props) {
                         No bill contributions needed today
                       </p>
                       <p className="mt-1 text-xs text-gray-500">
-                        Target savings are split across paydays leading up to each bill&apos;s due date. Make sure your paydays are added to calculate savings.
+                        Target savings are split across paydays leading up to
+                        each bill&apos;s due date. Make sure your paydays are
+                        added to calculate savings.
                       </p>
                     </div>
                   )}
                 </div>
-                <div className="mt-5 sm:mt-6">
+
+                <Transition
+                  show={calculatorOpen}
+                  as="div"
+                  enter="transition-all ease-out duration-300 overflow-hidden"
+                  enterFrom="opacity-0 max-h-0 -translate-y-2"
+                  enterTo="opacity-100 max-h-48 translate-y-0"
+                  leave="transition-all ease-in duration-200 overflow-hidden"
+                  leaveFrom="opacity-100 max-h-48 translate-y-0"
+                  leaveTo="opacity-0 max-h-0 -translate-y-2"
+                >
+                  <div className="mt-4 rounded-lg bg-gray-50 p-3 ring-1 ring-inset ring-gray-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <label
+                        htmlFor="currentBalance"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Current account balance
+                      </label>
+                      <span className="text-sm text-gray-500">
+                        Target:{" "}
+                        <span className="font-semibold text-gray-800">
+                          {formatCurrency(totalTarget)}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="relative mt-1.5 rounded-md shadow-sm">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span className="text-gray-500 sm:text-sm">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        id="currentBalance"
+                        name="currentBalance"
+                        value={currentBalance}
+                        onChange={(e) => setCurrentBalance(e.target.value)}
+                        placeholder="0.00"
+                        className="block w-full rounded-md border-0 py-1.5 pl-7 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      />
+                    </div>
+
+                    <div className="mt-2 text-sm">
+                      {hasValidBalance ? (
+                        difference > 0 ? (
+                          <div className="flex items-center justify-between text-indigo-700 font-medium">
+                            <span>Deposit needed:</span>
+                            <span className="text-sm font-semibold">
+                              {formatCurrency(difference)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between text-emerald-700 font-medium">
+                            <span>Target covered:</span>
+                            <span className="text-sm font-semibold">
+                              {difference === 0
+                                ? "Exact target"
+                                : `+${formatCurrency(Math.abs(difference))} surplus`}
+                            </span>
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-gray-400 italic text-right">
+                          Enter balance to calculate deposit
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Transition>
+
+                <div className="mt-4 sm:mt-6 flex items-center gap-2">
                   <button
                     type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                    onClick={() => setBreakdownModalOpen(false)}>
+                    className="inline-flex flex-1 justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    onClick={() => setBreakdownModalOpen(false)}
+                  >
                     Go back to dashboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCalculatorOpen(!calculatorOpen)}
+                    className={`inline-flex items-center justify-center rounded-md p-2 shadow-sm ring-1 ring-inset shrink-0 aspect-square transition-colors ${
+                      calculatorOpen
+                        ? "bg-indigo-50 text-indigo-600 ring-indigo-300 hover:bg-indigo-100"
+                        : "bg-white text-gray-900 ring-gray-300 hover:bg-gray-50"
+                    }`}
+                    aria-label={
+                      calculatorOpen ? "Close calculator" : "Open calculator"
+                    }
+                    aria-expanded={calculatorOpen}
+                  >
+                    <CalculatorIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
               </DialogPanel>
