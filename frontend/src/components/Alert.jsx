@@ -21,7 +21,7 @@ import PropTypes from "prop-types";
 export default function Alert(props) {
   const { className, type, heading, message, list, buttons } = props;
 
-  const renderIcon = type => {
+  const renderIcon = (type) => {
     switch (type) {
       case "success":
         return (
@@ -51,7 +51,7 @@ export default function Alert(props) {
     }
   };
 
-  const colour = type => {
+  const colour = (type) => {
     switch (type) {
       case "success":
         return "green";
@@ -77,8 +77,9 @@ export default function Alert(props) {
           {(message || list) && (
             <div
               className={`${heading ? "mt-2" : ""} text-sm text-${colour(
-                type
-              )}-700`}>
+                type,
+              )}-700`}
+            >
               {message && <p className={`${list && "mb-2"}`}>{message}</p>}
               {list && (
                 <ul role="list" className="list-disc space-y-1 pl-5">
@@ -90,22 +91,23 @@ export default function Alert(props) {
             </div>
           )}
           {buttons && (
-            <div className={list ? "mt-2" : "mt-4"}>
+            <div className={`space-x-2 ${list ? "mt-2" : "mt-4"}`}>
               {buttons.map((button, i) => (
                 <Link
                   key={i}
                   to={button.href}
                   className={`rounded-md bg-${colour(
-                    type
+                    type,
                   )}-50 px-2 py-1.5 text-sm font-medium text-${colour(
-                    type
+                    type,
                   )}-800 hover:bg-${colour(
-                    type
+                    type,
                   )}-100 focus:outline-none focus:ring-2 focus:ring-${colour(
-                    type
+                    type,
                   )}-600 focus:ring-offset-2 focus:ring-offset-${colour(
-                    type
-                  )}-50`}>
+                    type,
+                  )}-50`}
+                >
                   {button.text}
                 </Link>
               ))}

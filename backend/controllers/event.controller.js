@@ -166,7 +166,7 @@ const updateEvent = async (req, res) => {
             },
             {
               text: "Dashboard",
-              href: "/",
+              href: "/dashboard",
             },
           ],
         },
