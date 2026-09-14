@@ -42,19 +42,19 @@ export default function Calendar() {
   const monthViewDates = eachDayOfInterval({
     start: startOfWeek(firstDayOfMonth),
     end: endOfWeek(endOfMonth(firstDayOfMonth)),
-  }).map(x => format(x, "yyyy-MM-dd"));
+  }).map((x) => format(x, "yyyy-MM-dd"));
   // Map calendar events to dates
-  const calendarDates = monthViewDates.map(x => ({
+  const calendarDates = monthViewDates.map((x) => ({
     date: x,
     events: null,
   }));
 
-  const getEventColour = type => {
+  const getEventColour = (type) => {
     return type === "deposit" ? "deposit" : type === "bill" ? "red" : "green";
   };
 
   // Should only fire when month view changes
-  const fetchEvents = useCallback(async yearMonth => {
+  const fetchEvents = useCallback(async (yearMonth) => {
     const response = await getCalendarEvents(yearMonth);
 
     if (response.status === 200) {
@@ -79,7 +79,7 @@ export default function Calendar() {
     return classes.filter(Boolean).join(" ");
   };
 
-  const handleClickCell = date => {
+  const handleClickCell = (date) => {
     setSelectedDate(date);
   };
 
@@ -96,9 +96,9 @@ export default function Calendar() {
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-200 lg:h-0 lg:min-h-[742px] rounded-md">
+    <div className="bg-gray-50 border border-gray-300 lg:h-0 lg:min-h-[742px] rounded-md overflow-hidden">
       <div className="lg:flex lg:h-full lg:flex-col">
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4 lg:flex-none">
+        <header className="flex items-center justify-between border-b border-gray-300 px-6 py-4 lg:flex-none">
           <h1 className="text-base font-semibold leading-6 text-gray-900">
             <time dateTime={format(selectedDate, "yyyy-MM")}>
               {format(selectedDate, "MMMM yyyy")}
@@ -113,21 +113,24 @@ export default function Calendar() {
               <button
                 type="button"
                 onClick={handleClickPreviousMonth}
-                className="flex items-center justify-center rounded-l-md py-2 pl-3 pr-4 text-gray-400 hover:text-gray-500 md:w-9 md:px-2 md:hover:bg-gray-50">
+                className="flex items-center justify-center rounded-l-md py-2 pl-3 pr-4 text-gray-400 hover:text-gray-500 md:w-9 md:px-2 md:hover:bg-gray-50"
+              >
                 <span className="sr-only">Previous month</span>
                 <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
               </button>
               <button
                 type="button"
                 onClick={handleClickToday}
-                className="hidden px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 md:block">
+                className="hidden px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 md:block"
+              >
                 Today
               </button>
               <span className="relative -mx-px h-5 w-px bg-gray-300 md:hidden" />
               <button
                 type="button"
                 onClick={handleClickNextMonth}
-                className="flex items-center justify-center rounded-r-md py-2 pl-4 pr-3 text-gray-400 hover:text-gray-500 md:w-9 md:px-2 md:hover:bg-gray-50">
+                className="flex items-center justify-center rounded-r-md py-2 pl-4 pr-3 text-gray-400 hover:text-gray-500 md:w-9 md:px-2 md:hover:bg-gray-50"
+              >
                 <span className="sr-only">Next month</span>
                 <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -137,12 +140,14 @@ export default function Calendar() {
               <div className="h-6 w-px bg-gray-300" />
               <Link
                 to="/bills/add"
-                className="ml-6 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                className="ml-6 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
                 Add bill
               </Link>
               <Link
                 to="/paydays/add"
-                className="ml-4 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                className="ml-4 rounded-md  bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
                 Add payday
               </Link>
             </div>
@@ -163,7 +168,8 @@ export default function Calendar() {
                 enterTo="transform opacity-100 scale-100"
                 leave="transition ease-in duration-75"
                 leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95">
+                leaveTo="transform opacity-0 scale-95"
+              >
                 <MenuItems className="absolute right-0 z-10 mt-3 w-36 origin-top-right divide-y divide-gray-100 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="py-1">
                     <MenuItem>
@@ -174,8 +180,9 @@ export default function Calendar() {
                             focus
                               ? "bg-gray-100 text-gray-900"
                               : "text-gray-700",
-                            "block px-4 py-2 text-sm"
-                          )}>
+                            "block px-4 py-2 text-sm",
+                          )}
+                        >
                           Add bill
                         </Link>
                       )}
@@ -188,8 +195,9 @@ export default function Calendar() {
                             focus
                               ? "bg-gray-100 text-gray-900"
                               : "text-gray-700",
-                            "block px-4 py-2 text-sm"
-                          )}>
+                            "block px-4 py-2 text-sm",
+                          )}
+                        >
                           Add payday
                         </Link>
                       )}
@@ -204,8 +212,9 @@ export default function Calendar() {
                             focus
                               ? "bg-gray-100 text-gray-900"
                               : "text-gray-700",
-                            "block px-4 py-2 text-sm"
-                          )}>
+                            "block px-4 py-2 text-sm",
+                          )}
+                        >
                           Go to today
                         </button>
                       )}
@@ -216,9 +225,9 @@ export default function Calendar() {
             </Menu>
           </div>
         </header>
-        <div className="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
+        <div className="lg:flex lg:flex-auto lg:flex-col">
           <div className="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
-            {weekdays.map(weekday => (
+            {weekdays.map((weekday) => (
               <div key={weekday} className="bg-white py-2">
                 {/* First letter only */}
                 {weekday.charAt(0).toUpperCase()}
@@ -229,9 +238,9 @@ export default function Calendar() {
               </div>
             ))}
           </div>
-          <div className="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto">
+          <div className="flex bg-gray-200 text-xs leading-6 text-gray-700 lg:flex-auto ">
             <div className={`w-full grid grid-cols-7 auto-rows-fr gap-px`}>
-              {calendarDates.map(calendarDate => {
+              {calendarDates.map((calendarDate) => {
                 const { date } = calendarDate;
                 const isCurrentMonth = isSameMonth(date, selectedDate);
                 const isSelectedDate = isSameDay(date, selectedDate);
@@ -246,12 +255,13 @@ export default function Calendar() {
                         ? isSelectedDate
                           ? "bg-white font-semibold text-white"
                           : isCurrentDate
-                          ? "bg-white font-semibold text-indigo-600"
-                          : "bg-white text-gray-900"
+                            ? "bg-white font-semibold text-indigo-600"
+                            : "bg-white text-gray-900"
                         : isSelectedDate
-                        ? "font-semibold text-white bg-gray-50"
-                        : "bg-gray-50 text-gray-500"
-                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full`}>
+                          ? "font-semibold text-white bg-gray-50"
+                          : "bg-gray-50 text-gray-500"
+                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full`}
+                  >
                     <div className="flex items-center justify-between">
                       <time
                         className={`${
@@ -261,24 +271,25 @@ export default function Calendar() {
                               }`
                             : "flex"
                         } ml-auto lg:ml-0`}
-                        dateTime={format(date, "yyyy-MM-dd")}>
+                        dateTime={format(date, "yyyy-MM-dd")}
+                      >
                         {getDate(date)}
                       </time>
-                      {dailyTargetSavings.find(x => x.date === date) && (
+                      {dailyTargetSavings.find((x) => x.date === date) && (
                         <div className="hidden lg:block">
                           <TargetSavings
                             targetSavings={
-                              dailyTargetSavings.find(x => x.date === date)
+                              dailyTargetSavings.find((x) => x.date === date)
                                 .targetSavings
                             }
                           />
                         </div>
                       )}
                     </div>
-                    {events.filter(x => x.date === date).length > 0 && (
+                    {events.filter((x) => x.date === date).length > 0 && (
                       <CalendarEvents
                         key={date}
-                        events={events.filter(x => x.date === date)}
+                        events={events.filter((x) => x.date === date)}
                       />
                     )}
                   </button>
@@ -289,10 +300,11 @@ export default function Calendar() {
         </div>
 
         <MobileCalendarEvents
-          events={events.filter(x => x.date === selectedDate)}
+          events={events.filter((x) => x.date === selectedDate)}
           getEventColour={getEventColour}
           targetSavings={
-            dailyTargetSavings.find(x => x.date === selectedDate)?.targetSavings
+            dailyTargetSavings.find((x) => x.date === selectedDate)
+              ?.targetSavings
           }
         />
       </div>
