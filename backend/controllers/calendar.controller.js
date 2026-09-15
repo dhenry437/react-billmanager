@@ -453,18 +453,43 @@ const calculateDailyTargetSavings = (
               bill.reactState?.recurring !== false &&
               billRule.origOptions.count !== 1;
             let previousBillOccurrence = billRule.before(nextBillOccurrence);
+            const isFirstOccurrence = !previousBillOccurrence;
             let billCycleStartDate;
-            if (!isRecurring) {
+
+            if (!isRecurring || isFirstOccurrence) {
               billCycleStartDate = startOfDay(
                 new Date(bill.createdAt || billRule.origOptions.dtstart)
               );
+
+              // Check if there are any paydays between billCycleStartDate and nextBillOccurrence
+              const paydaysAhead = new Set();
+              for (const paydayEvent of allPaydayEvents) {
+                paydayEvent.rrule
+                  .between(billCycleStartDate, nextBillOccurrence, true)
+                  .forEach(date =>
+                    paydaysAhead.add(format(date, "yyyy-MM-dd"))
+                  );
+              }
+
+              // If no paydays between creation and due date, anchor to the payday before the bill
+              if (paydaysAhead.size === 0) {
+                let paydayBeforeBill = null;
+                for (const paydayEvent of allPaydayEvents) {
+                  const pb = paydayEvent.rrule.before(nextBillOccurrence, true);
+                  if (pb && (!paydayBeforeBill || pb > paydayBeforeBill)) {
+                    paydayBeforeBill = pb;
+                  }
+                }
+                if (paydayBeforeBill) {
+                  billCycleStartDate = paydayBeforeBill;
+                }
+              }
+
               if (billCycleStartDate > nextBillOccurrence) {
                 billCycleStartDate = nextBillOccurrence;
               }
-            } else if (previousBillOccurrence) {
-              billCycleStartDate = addDays(previousBillOccurrence, 1);
             } else {
-              billCycleStartDate = addDays(billRule.origOptions.dtstart, 1);
+              billCycleStartDate = addDays(previousBillOccurrence, 1);
             }
 
             const uniqueTotalPaydays = new Set();
@@ -492,7 +517,7 @@ const calculateDailyTargetSavings = (
             if (totalPaydaysInBillCycle > 0) {
               const proportion = passedPaydaysInCycle / totalPaydaysInBillCycle;
               billProportion = bill.amount * proportion;
-            } else if (!isRecurring) {
+            } else if (!isRecurring || isFirstOccurrence) {
               billProportion = bill.amount;
             }
 

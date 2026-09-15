@@ -213,5 +213,108 @@ describe("calendar.controller.js", () => {
         testResult.find(d => d.date === "2025-09-27").targetSavings.amount
       ).toBe(300);
     });
+
+    it("should include 100% of a newly added recurring bill due before the next payday starting from the funding payday", () => {
+      // Bill created around Sept 15, due Sept 20. Last payday is Sept 15, next payday is Sept 26.
+      const newRecurringBill = {
+        id: "new-rec-1",
+        name: "Car Registration",
+        description: "Quarterly rego",
+        amount: 240,
+        type: "bill",
+        createdAt: "2025-09-15T05:00:00.000Z",
+        rruleString:
+          "DTSTART:20250920T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=20",
+        rrule: RRule.fromString(
+          "DTSTART:20250920T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=20"
+        ),
+        reactState: {
+          recurring: true,
+          recurringN: "3",
+          recurringFrequency: "months",
+        },
+      };
+
+      const testResult = calculateDailyTargetSavings(
+        monthViewDates,
+        [newRecurringBill],
+        allPaydayEvents
+      );
+
+      // On 2025-09-14 (before the funding payday Sept 15): 0
+      expect(
+        testResult.find(d => d.date === "2025-09-14").targetSavings.amount
+      ).toBe(0);
+
+      // On 2025-09-15 (payday): entire 240 is allocated for this bill
+      expect(
+        testResult.find(d => d.date === "2025-09-15").targetSavings.breakdown
+      ).toContainEqual(
+        expect.objectContaining({ name: "Car Registration", amount: 240 })
+      );
+
+      // On 2025-09-16: entire 240 remains allocated
+      expect(
+        testResult.find(d => d.date === "2025-09-16").targetSavings.breakdown
+      ).toContainEqual(
+        expect.objectContaining({ name: "Car Registration", amount: 240 })
+      );
+
+      // On 2025-09-19: entire 240 remains allocated
+      expect(
+        testResult.find(d => d.date === "2025-09-19").targetSavings.breakdown
+      ).toContainEqual(
+        expect.objectContaining({ name: "Car Registration", amount: 240 })
+      );
+    });
+
+    it("should divide a newly added recurring bill across future paydays if created with paydays ahead", () => {
+      // Bill created on Sept 10, first due date Sept 28.
+      // Paydays ahead: Sept 12, 15, 26 (3 paydays).
+      const newRecurringBillFuture = {
+        id: "new-rec-future",
+        name: "Gym Membership",
+        description: "Quarterly gym",
+        amount: 300,
+        type: "bill",
+        createdAt: "2025-09-10T00:00:00.000Z",
+        rruleString:
+          "DTSTART:20250928T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=28",
+        rrule: RRule.fromString(
+          "DTSTART:20250928T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=28"
+        ),
+        reactState: {
+          recurring: true,
+          recurringN: "3",
+          recurringFrequency: "months",
+        },
+      };
+
+      const testResult = calculateDailyTargetSavings(
+        monthViewDates,
+        [newRecurringBillFuture],
+        allPaydayEvents
+      );
+
+      // On 2025-09-11 (before any payday after Sept 10): 0
+      expect(
+        testResult.find(d => d.date === "2025-09-11").targetSavings.amount
+      ).toBe(0);
+
+      // On 2025-09-13 (after 1 payday: Sept 12): 1/3 * 300 = 100
+      expect(
+        testResult.find(d => d.date === "2025-09-13").targetSavings.amount
+      ).toBe(100);
+
+      // On 2025-09-16 (after 2 paydays: Sept 12, 15): 2/3 * 300 = 200
+      expect(
+        testResult.find(d => d.date === "2025-09-16").targetSavings.amount
+      ).toBe(200);
+
+      // On 2025-09-27 (after 3 paydays: Sept 12, 15, 26): 3/3 * 300 = 300
+      expect(
+        testResult.find(d => d.date === "2025-09-27").targetSavings.amount
+      ).toBe(300);
+    });
   });
 });
