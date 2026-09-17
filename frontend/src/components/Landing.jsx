@@ -9,9 +9,9 @@ export default function Landing() {
             The simple way to manage your bills
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
-            lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat
-            fugiat aliqua.
+            Align your upcoming bills with your paycheck cycles so you always
+            know exactly how much to set aside from each pay. No spreadsheets, no
+            surprises.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
@@ -20,8 +20,8 @@ export default function Landing() {
               Get started
             </Link>
             <Link
-              to="#"
-              className="text-sm font-semibold leading-6 text-gray-900">
+              to="/how-it-works"
+              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors">
               Learn more <span aria-hidden="true">→</span>
             </Link>
           </div>

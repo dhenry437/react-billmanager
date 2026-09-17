@@ -22,6 +22,11 @@ export default function Navbar() {
     { name: "Dashboard", href: "/dashboard", current: useMatch("/dashboard") },
     { name: "Bills", href: "/bills", current: useMatch("/bills") },
     { name: "Paydays", href: "/paydays", current: useMatch("/paydays") },
+    {
+      name: "How it works",
+      href: "/how-it-works",
+      current: useMatch("/how-it-works"),
+    },
   ];
   const userNavigation = [{ name: "Sign out", action: signOutUser }];
 

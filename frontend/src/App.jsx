@@ -6,6 +6,7 @@ import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import PageNotFound from "./components/PageNotFound";
 import Landing from "./components/Landing";
+import HowItWorks from "./components/HowItWorks";
 import { PrivateRoutes } from "./components/PrivateRoutes";
 import { useContext } from "react";
 import AuthContext from "./hooks/AuthContext";
@@ -21,6 +22,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Navbar />}>
         <Route path="" element={<Landing />} />
+        <Route path="how-it-works" element={<HowItWorks />} />
+        <Route path="learn-more" element={<HowItWorks />} />
         <Route element={<PrivateRoutes />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="paydays" element={<EventList />} />
