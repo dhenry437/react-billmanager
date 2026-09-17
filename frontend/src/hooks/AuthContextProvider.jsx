@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUser, signOut } from "../data/repository";
+import { setGlobalCurrency } from "../util";
 import PropTypes from "prop-types";
 import AuthContext from "./AuthContext";
 
@@ -18,6 +19,12 @@ export default function AuthContextProvider({ children }) {
   useEffect(() => {
     getUserCallback();
   }, [getUserCallback]);
+
+  useEffect(() => {
+    if (user?.preferences?.currency) {
+      setGlobalCurrency(user.preferences.currency);
+    }
+  }, [user]);
 
   const signInUser = user => {
     setUser(user);

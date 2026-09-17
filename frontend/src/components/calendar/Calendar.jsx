@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useContext, useEffect, useState } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -29,19 +29,26 @@ import { getCalendarEvents } from "../../data/repository";
 import CalendarEvents from "./CalendarEvents";
 import TargetSavings from "./TargetSavings";
 import MobileCalendarEvents from "./MobileCalendarEvents";
+import AuthContext from "../../hooks/AuthContext";
 
 export default function Calendar() {
+  const { user } = useContext(AuthContext);
+  const weekStartsOn = user?.preferences?.weekStartsOn ?? 1;
+
   const today = format(new Date(), "yyyy-MM-dd", new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [events, setEvents] = useState([]);
   const [dailyTargetSavings, setDailyTargetSavings] = useState([]);
 
-  const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const weekdays =
+    weekStartsOn === 1
+      ? ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+      : ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
   const firstDayOfMonth = startOfMonth(selectedDate);
   const monthViewDates = eachDayOfInterval({
-    start: startOfWeek(firstDayOfMonth),
-    end: endOfWeek(endOfMonth(firstDayOfMonth)),
+    start: startOfWeek(firstDayOfMonth, { weekStartsOn }),
+    end: endOfWeek(endOfMonth(firstDayOfMonth), { weekStartsOn }),
   }).map((x) => format(x, "yyyy-MM-dd"));
   // Map calendar events to dates
   const calendarDates = monthViewDates.map((x) => ({
@@ -73,7 +80,7 @@ export default function Calendar() {
   const yearMonth = format(selectedDate, "yyyy-MM");
   useEffect(() => {
     fetchEvents(yearMonth);
-  }, [fetchEvents, yearMonth]);
+  }, [fetchEvents, yearMonth, weekStartsOn]);
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");

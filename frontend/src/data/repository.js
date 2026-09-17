@@ -28,6 +28,37 @@ export const updatePassword = async fields => {
   return response;
 };
 
+export const updatePreferences = async fields => {
+  const response = await axios
+    .put("/users/preferences", fields)
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+export const exportUserData = async () => {
+  const response = await axios
+    .get("/users/export")
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+export const deleteAccount = async fields => {
+  const response = await axios
+    .delete("/users", { data: fields })
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+
 
 export const signIn = async fields => {
   const response = await axios

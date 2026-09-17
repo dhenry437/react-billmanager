@@ -21,8 +21,19 @@ app.use(
 
 const db = require("./db");
 const { getCalendarEvents } = require("./controllers/calendar.controller.js");
-db.sequelize.sync();
+db.sequelize.sync().then(async () => {
+  try {
+    await db.sequelize.query(`
+      ALTER TABLE "Users" 
+      ADD COLUMN IF NOT EXISTS "preferences" JSON 
+      DEFAULT '{"currency":"AUD","weekStartsOn":1,"dateFormat":"dd/MM/yyyy","bufferType":"none","bufferValue":0}';
+    `);
+  } catch (e) {
+    console.log("Users.preferences column check notice:", e.message);
+  }
+});
 // db.sequelize.sync({ force: true })
+
 
 app.use(express.json()); // Used to parse JSON bodies
 app.use(compression()); //Compress all routes

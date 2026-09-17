@@ -8,6 +8,9 @@ jest.mock("../services/user.service");
 const {
   updateProfile,
   updatePassword,
+  updatePreferences,
+  exportData,
+  deleteAccount,
 } = require("../controllers/user.controller");
 const userService = require("../services/user.service");
 
@@ -175,4 +178,110 @@ describe("user.controller.js", () => {
       });
     });
   });
+
+  describe("updatePreferences", () => {
+    it("should return 400 if validation fails (invalid currency)", async () => {
+      req.body = { currency: "INVALID_CURRENCY" };
+
+      await updatePreferences(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alert: expect.objectContaining({
+            type: "danger",
+          }),
+        })
+      );
+    });
+
+    it("should update preferences and update session user on success", async () => {
+      req.body = {
+        currency: "USD",
+        weekStartsOn: 0,
+        dateFormat: "MM/dd/yyyy",
+        bufferType: "percentage",
+        bufferValue: 15,
+      };
+
+      const mockUpdated = {
+        currency: "USD",
+        weekStartsOn: 0,
+        dateFormat: "MM/dd/yyyy",
+        bufferType: "percentage",
+        bufferValue: 15,
+      };
+      userService.updateUserPreferencesInDb.mockResolvedValue(mockUpdated);
+
+      await updatePreferences(req, res);
+
+      expect(userService.updateUserPreferencesInDb).toHaveBeenCalledWith(
+        "user-123",
+        req.body
+      );
+      expect(req.user.preferences).toEqual(mockUpdated);
+      expect(res.send).toHaveBeenCalledWith({
+        preferences: mockUpdated,
+        alert: {
+          type: "success",
+          message: "Preferences updated successfully",
+        },
+      });
+    });
+  });
+
+  describe("exportData", () => {
+    it("should return user data as json download", async () => {
+      const mockExportData = {
+        version: "1.0",
+        profile: { name: "Test User" },
+        bills: [],
+        paydays: [],
+      };
+      userService.exportUserDataFromDb.mockResolvedValue(mockExportData);
+      res.setHeader = jest.fn();
+
+      await exportData(req, res);
+
+      expect(userService.exportUserDataFromDb).toHaveBeenCalledWith("user-123");
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Content-Type",
+        "application/json"
+      );
+      expect(res.send).toHaveBeenCalledWith(mockExportData);
+    });
+  });
+
+  describe("deleteAccount", () => {
+    it("should return 400 if password is missing", async () => {
+      req.body = { password: "" };
+
+      await deleteAccount(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it("should delete account and logout session on valid password", async () => {
+      req.body = { password: "validPassword123" };
+      userService.deleteUserAccountFromDb.mockResolvedValue(true);
+      req.logout = jest.fn(cb => cb(null));
+      req.session = { destroy: jest.fn(cb => cb()) };
+
+      await deleteAccount(req, res);
+
+      expect(userService.deleteUserAccountFromDb).toHaveBeenCalledWith(
+        "user-123",
+        "validPassword123"
+      );
+      expect(req.logout).toHaveBeenCalled();
+      expect(req.session.destroy).toHaveBeenCalled();
+      expect(res.send).toHaveBeenCalledWith({
+        alert: {
+          type: "success",
+          message: "Account deleted successfully",
+        },
+      });
+    });
+  });
 });
+

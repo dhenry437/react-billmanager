@@ -316,5 +316,37 @@ describe("calendar.controller.js", () => {
         testResult.find(d => d.date === "2025-09-27").targetSavings.amount
       ).toBe(300);
     });
+
+    it("should add fixed buffer to target savings when base savings > 0", () => {
+      const unbufferedDay = result.find(d => d.date === "2025-09-17").targetSavings.amount;
+      const bufferedResult = calculateDailyTargetSavings(
+        monthViewDates,
+        allBillEvents,
+        allPaydayEvents,
+        { bufferType: "fixed", bufferValue: 50 }
+      );
+
+      const dayItem = bufferedResult.find(d => d.date === "2025-09-17");
+      expect(dayItem.targetSavings.baseAmount).toBe(unbufferedDay);
+      expect(dayItem.targetSavings.bufferAmount).toBe(50);
+      expect(dayItem.targetSavings.amount).toBe(unbufferedDay + 50);
+    });
+
+    it("should add percentage buffer to target savings when base savings > 0", () => {
+      const unbufferedDay = result.find(d => d.date === "2025-09-17").targetSavings.amount;
+      const expectedBuffer = Math.round(unbufferedDay * 0.1 * 100) / 100;
+      const bufferedResult = calculateDailyTargetSavings(
+        monthViewDates,
+        allBillEvents,
+        allPaydayEvents,
+        { bufferType: "percentage", bufferValue: 10 }
+      );
+
+      const dayItem = bufferedResult.find(d => d.date === "2025-09-17");
+      expect(dayItem.targetSavings.baseAmount).toBe(unbufferedDay);
+      expect(dayItem.targetSavings.bufferAmount).toBe(expectedBuffer);
+      expect(dayItem.targetSavings.amount).toBe(unbufferedDay + expectedBuffer);
+    });
   });
 });
+

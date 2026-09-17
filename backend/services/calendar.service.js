@@ -7,11 +7,11 @@ const {
   format,
 } = require("date-fns");
 
-const getMonthViewDates = yearMonth => {
+const getMonthViewDates = (yearMonth, weekStartsOn = 1) => {
   const firstDayOfMonth = startOfMonth(yearMonth);
   const monthViewDates = eachDayOfInterval({
-    start: startOfWeek(firstDayOfMonth),
-    end: endOfWeek(endOfMonth(firstDayOfMonth)),
+    start: startOfWeek(firstDayOfMonth, { weekStartsOn }),
+    end: endOfWeek(endOfMonth(firstDayOfMonth), { weekStartsOn }),
   }).map(x => format(x, "yyyy-MM-dd"));
 
   return monthViewDates;

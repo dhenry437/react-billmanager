@@ -26,6 +26,7 @@ export default function TargetSavings(props) {
         breakdownModalOpen={breakdownModalOpen}
         setBreakdownModalOpen={setBreakdownModalOpen}
         breakdown={breakdown}
+        targetSavings={targetSavings}
       />
     </>
   );

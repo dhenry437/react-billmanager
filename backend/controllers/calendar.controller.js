@@ -41,7 +41,8 @@ const getCalendarEvents = async (req, res) => {
     }));
 
     // Get month view dates
-    const monthViewDates = getMonthViewDates(yearMonth);
+    const weekStartsOn = req.user?.preferences?.weekStartsOn ?? 1;
+    const monthViewDates = getMonthViewDates(yearMonth, weekStartsOn);
 
     // Get event occurrences for month view
     events = events.map(x => ({
@@ -81,7 +82,8 @@ const getCalendarEvents = async (req, res) => {
     const dailyTargetSavings = calculateDailyTargetSavings(
       monthViewDates,
       allBillEvents,
-      allPaydayEvents
+      allPaydayEvents,
+      req.user?.preferences
     );
 
     // const depositEvents = calculateDepositEvents(
@@ -386,9 +388,12 @@ const calculateDepositEvents = (
 const calculateDailyTargetSavings = (
   monthViewDates,
   allBillEvents,
-  allPaydayEvents
+  allPaydayEvents,
+  preferences = {}
 ) => {
   const dailySavings = [];
+  const bufferType = preferences?.bufferType || "none";
+  const bufferValue = Number(preferences?.bufferValue) || 0;
 
   for (const dateStr of monthViewDates) {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -546,15 +551,29 @@ const calculateDailyTargetSavings = (
       }
     }
 
-    const totalNeededForDay = breakdownForThisDay.reduce(
+    const baseTotalNeeded = breakdownForThisDay.reduce(
       (sum, item) => sum + item.amount,
       0
     );
+
+    let bufferAmount = 0;
+    if (baseTotalNeeded > 0) {
+      if (bufferType === "fixed" && bufferValue > 0) {
+        bufferAmount = bufferValue;
+      } else if (bufferType === "percentage" && bufferValue > 0) {
+        bufferAmount =
+          Math.round(baseTotalNeeded * (bufferValue / 100) * 100) / 100;
+      }
+    }
+
+    const totalNeededForDay = baseTotalNeeded + bufferAmount;
 
     dailySavings.push({
       date: dateStr,
       targetSavings: {
         amount: totalNeededForDay,
+        baseAmount: baseTotalNeeded,
+        bufferAmount: bufferAmount,
         breakdown: breakdownForThisDay,
       },
     });

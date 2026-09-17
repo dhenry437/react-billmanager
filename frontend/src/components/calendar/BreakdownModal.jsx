@@ -5,6 +5,7 @@ import {
   CheckIcon,
   ClipboardDocumentIcon,
   CurrencyDollarIcon,
+  ShieldCheckIcon,
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 import {
@@ -14,10 +15,11 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { Link } from "react-router-dom";
-import { formatCurrency } from "../../util";
+import { formatCurrency, getCurrencySymbol } from "../../util";
 
 export default function BreakdownModal(props) {
-  const { breakdownModalOpen, setBreakdownModalOpen, breakdown } = props;
+  const { breakdownModalOpen, setBreakdownModalOpen, breakdown, targetSavings } =
+    props;
 
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [currentBalance, setCurrentBalance] = useState("");
@@ -33,9 +35,13 @@ export default function BreakdownModal(props) {
     }
   }, [calculatorOpen]);
 
-  const totalTarget = breakdown
-    ? breakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
-    : 0;
+  const totalTarget =
+    targetSavings?.amount ??
+    (breakdown
+      ? breakdown.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+      : 0);
+
+  const bufferAmount = targetSavings?.bufferAmount || 0;
 
   const balanceNum = parseFloat(currentBalance);
   const hasValidBalance = !isNaN(balanceNum) && currentBalance.trim() !== "";
@@ -91,16 +97,16 @@ export default function BreakdownModal(props) {
                   </button>
                 </div>
                 <div className="py-2 flow-root px-3">
-                  {breakdown && breakdown.length > 0 ? (
+                  {(breakdown && breakdown.length > 0) || bufferAmount > 0 ? (
                     <ul role="list" className="-mb-8">
-                      {breakdown.map((breakdownItem, i) => {
+                      {breakdown?.map((breakdownItem, i) => {
                         const { name, amount, id, description } = breakdownItem;
 
                         return (
                           <li key={i}>
                             <Link to={`/bills/${id}`}>
                               <div className="relative pb-8">
-                                {i !== breakdown.length - 1 ? (
+                                {i !== breakdown.length - 1 || bufferAmount > 0 ? (
                                   <span
                                     className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200"
                                     aria-hidden="true"
@@ -135,6 +141,36 @@ export default function BreakdownModal(props) {
                           </li>
                         );
                       })}
+                      {bufferAmount > 0 && (
+                        <li key="buffer-item">
+                          <div className="relative pb-8">
+                            <div className="relative flex space-x-3">
+                              <div>
+                                <span className="bg-indigo-600 h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white">
+                                  <ShieldCheckIcon
+                                    className="h-5 w-5 text-white"
+                                    aria-hidden="true"
+                                  />
+                                </span>
+                              </div>
+                              <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    Buffer
+                                    {"  "}
+                                    <span className="font-normal text-gray-500">
+                                      Target savings buffer
+                                    </span>
+                                  </p>
+                                </div>
+                                <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                                  <span>{formatCurrency(bufferAmount)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      )}
                     </ul>
                   ) : (
                     <div className="py-6 text-center text-sm text-gray-500">
@@ -177,7 +213,9 @@ export default function BreakdownModal(props) {
                     </div>
                     <div className="relative mt-1.5 rounded-md shadow-sm">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">$</span>
+                        <span className="text-gray-500 sm:text-sm">
+                          {getCurrencySymbol()}
+                        </span>
                       </div>
                       <input
                         ref={balanceInputRef}
@@ -300,4 +338,5 @@ BreakdownModal.propTypes = {
   breakdownModalOpen: PropTypes.bool.isRequired,
   setBreakdownModalOpen: PropTypes.func.isRequired,
   breakdown: PropTypes.array,
+  targetSavings: PropTypes.object,
 };

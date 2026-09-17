@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import Select from "./ui/Select";
 import WeekdayBubbles from "./ui/WeekdayBubbles";
 import { format, isAfter } from "date-fns";
-import { getOrdinalWeekdayOfMonth, titleCase } from "../util";
+import {
+  getCurrencySymbol,
+  getOrdinalWeekdayOfMonth,
+  titleCase,
+} from "../util";
 import { createEvent, getEventById, updateEvent } from "../data/repository";
 import Spinner from "./Spinner";
 import Alert from "./Alert";
@@ -164,7 +168,9 @@ export const EventForm = () => {
             </label>
             <div className="relative mt-2 rounded-md shadow-sm">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="text-gray-500 sm:text-sm">$</span>
+                <span className="text-gray-500 sm:text-sm">
+                  {getCurrencySymbol()}
+                </span>
               </div>
               <input
                 type="number"

@@ -35,12 +35,38 @@ export const getOrdinalWeekdayOfMonth = date => {
     : ordinalSuffix(nWeeksDiff + 1);
 };
 
-export const formatCurrency = amount => {
-  if (amount === undefined || amount === null || isNaN(amount)) {
-    return "$-.--";
+export const CURRENCIES = {
+  AUD: { locale: "en-AU", symbol: "$", label: "AUD ($) - Australian Dollar" },
+  USD: { locale: "en-US", symbol: "$", label: "USD ($) - US Dollar" },
+  EUR: { locale: "de-DE", symbol: "€", label: "EUR (€) - Euro" },
+  GBP: { locale: "en-GB", symbol: "£", label: "GBP (£) - British Pound" },
+  CAD: { locale: "en-CA", symbol: "$", label: "CAD ($) - Canadian Dollar" },
+  NZD: { locale: "en-NZ", symbol: "$", label: "NZD ($) - New Zealand Dollar" },
+};
+
+let activeCurrency = "AUD";
+
+export const setGlobalCurrency = currencyCode => {
+  if (CURRENCIES[currencyCode]) {
+    activeCurrency = currencyCode;
   }
-  return new Intl.NumberFormat("en-AU", {
+};
+
+export const getGlobalCurrency = () => activeCurrency;
+
+export const getCurrencySymbol = (currencyCode = activeCurrency) => {
+  return CURRENCIES[currencyCode]?.symbol || "$";
+};
+
+export const formatCurrency = (amount, currencyCode = activeCurrency) => {
+  const code = CURRENCIES[currencyCode] ? currencyCode : "AUD";
+  const currencyInfo = CURRENCIES[code];
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return `${currencyInfo.symbol}-.--`;
+  }
+  return new Intl.NumberFormat(currencyInfo.locale, {
     style: "currency",
-    currency: "AUD",
+    currency: code,
   }).format(amount);
 };
+

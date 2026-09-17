@@ -15,7 +15,7 @@ passport.use(
     try {
       // Find user with matching email
       const user = await User.findOne({
-        attributes: ["id", "name", "email", "hashedPassword"],
+        attributes: ["id", "name", "email", "hashedPassword", "preferences"],
         where: { email },
         raw: true,
       });
@@ -26,6 +26,17 @@ passport.use(
       const match = await bcrypt.compare(password, user.hashedPassword);
       if (!match)
         return done(null, false, { message: "Incorrect username or password" });
+
+      if (user) {
+        user.preferences = {
+          currency: "AUD",
+          weekStartsOn: 1,
+          dateFormat: "dd/MM/yyyy",
+          bufferType: "none",
+          bufferValue: 0,
+          ...(user.preferences || {}),
+        };
+      }
 
       return done(null, user);
     } catch {
@@ -39,9 +50,22 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-  User.findByPk(id, { attributes: ["id", "name", "email"] }).then(function (
-    user
-  ) {
-    done(null, user);
-  });
+  User.findByPk(id, {
+    attributes: ["id", "name", "email", "preferences"],
+  })
+    .then(function (user) {
+      if (user) {
+        user.preferences = {
+          currency: "AUD",
+          weekStartsOn: 1,
+          dateFormat: "dd/MM/yyyy",
+          bufferType: "none",
+          bufferValue: 0,
+          ...(user.preferences || {}),
+        };
+      }
+      done(null, user);
+    })
+    .catch(err => done(err));
 });
+

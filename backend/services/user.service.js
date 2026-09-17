@@ -53,7 +53,130 @@ const updateUserProfileInDb = async (userId, { name, email }) => {
   user.email = email;
   await user.save();
 
-  return { id: user.id, name: user.name, email: user.email };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    preferences: user.preferences,
+  };
+};
+
+const updateUserPreferencesInDb = async (userId, newPreferences) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const updatedPreferences = {
+    currency: "AUD",
+    weekStartsOn: 1,
+    dateFormat: "dd/MM/yyyy",
+    bufferType: "none",
+    bufferValue: 0,
+    ...(user.preferences || {}),
+    ...newPreferences,
+  };
+
+  user.preferences = updatedPreferences;
+  await user.save();
+
+  return updatedPreferences;
+};
+
+const exportUserDataFromDb = async userId => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const Event = db.events;
+  const events = await Event.findAll({
+    where: { userId },
+    raw: true,
+  });
+
+  return {
+    version: "1.0",
+    exportedAt: new Date().toISOString(),
+    profile: {
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences,
+      createdAt: user.createdAt,
+    },
+    bills: events
+      .filter(e => e.type === "bill")
+      .map(
+        ({
+          id,
+          name,
+          description,
+          amount,
+          date,
+          rruleString,
+          reactState,
+          createdAt,
+        }) => ({
+          id,
+          name,
+          description,
+          amount,
+          date,
+          rruleString,
+          reactState,
+          createdAt,
+        })
+      ),
+    paydays: events
+      .filter(e => e.type === "payday")
+      .map(
+        ({
+          id,
+          name,
+          description,
+          amount,
+          date,
+          rruleString,
+          reactState,
+          createdAt,
+        }) => ({
+          id,
+          name,
+          description,
+          amount,
+          date,
+          rruleString,
+          reactState,
+          createdAt,
+        })
+      ),
+  };
+};
+
+const deleteUserAccountFromDb = async (userId, password) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const match = await bcrypt.compare(password, user.hashedPassword);
+  if (!match) {
+    const error = new Error("Incorrect password");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const Event = db.events;
+  await Event.destroy({ where: { userId } });
+  await user.destroy();
+
+  return true;
 };
 
 const updateUserPasswordInDb = async (userId, currentPassword, newPassword) => {
@@ -82,5 +205,9 @@ module.exports = {
   createUserInDb,
   getUsersFromDb,
   updateUserProfileInDb,
+  updateUserPreferencesInDb,
   updateUserPasswordInDb,
+  exportUserDataFromDb,
+  deleteUserAccountFromDb,
 };
+
