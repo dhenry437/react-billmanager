@@ -1,16 +1,22 @@
 const express = require("express");
 const router = express.Router();
 
-const { createUser } = require("../controllers/user.controller");
+const {
+  createUser,
+  updateProfile,
+  updatePassword,
+} = require("../controllers/user.controller");
 const { verifyReCaptcha } = require("../middleware/recaptcha.middleware");
+const { ensureAuthenticated } = require("../middleware/auth.middleware");
 
 // Create new user
 router.post("", verifyReCaptcha, createUser);
 
-// Edit a user
-// router.put("/:id");
+// Update user profile
+router.put("/profile", ensureAuthenticated, updateProfile);
 
-// Delete a user
-// router.delete("/:id");
+// Update user password
+router.put("/password", ensureAuthenticated, updatePassword);
 
 module.exports = router;
+

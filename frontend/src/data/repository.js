@@ -8,6 +8,27 @@ export const createUser = async fields => {
   return response;
 };
 
+export const updateProfile = async fields => {
+  const response = await axios
+    .put("/users/profile", fields)
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+export const updatePassword = async fields => {
+  const response = await axios
+    .put("/users/password", fields)
+    .catch(function (error) {
+      return error.response;
+    });
+
+  return response;
+};
+
+
 export const signIn = async fields => {
   const response = await axios
     .post("/auth/sign-in", fields)

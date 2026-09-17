@@ -28,7 +28,10 @@ export default function Navbar() {
       current: useMatch("/how-it-works"),
     },
   ];
-  const userNavigation = [{ name: "Sign out", action: signOutUser }];
+  const userNavigation = [
+    { name: "Settings", href: "/settings" },
+    { name: "Sign out", action: signOutUser },
+  ];
 
   const classNames = (...classes) => {
     return classes.filter(Boolean).join(" ");

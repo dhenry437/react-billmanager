@@ -1,5 +1,10 @@
 const z = require("zod");
-const { createUserInDb, getUsersFromDb } = require("../services/user.service");
+const {
+  createUserInDb,
+  getUsersFromDb,
+  updateUserProfileInDb,
+  updateUserPasswordInDb,
+} = require("../services/user.service");
 
 const createUser = async (req, res) => {
   const createUserSchema = z
@@ -73,6 +78,105 @@ const createUser = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  const updateProfileSchema = z.object({
+    name: z.string().min(1, { message: "Name is required" }),
+    email: z.string().email({ message: "Invalid email address" }),
+  });
+
+  const result = updateProfileSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).send({
+      alert: {
+        type: "danger",
+        message: "Please address the following:",
+        list: result.error.issues.map(x => x.message),
+      },
+    });
+  }
+
+  try {
+    const updatedUser = await updateUserProfileInDb(req.user.id, result.data);
+
+    if (req.user) {
+      req.user.name = updatedUser.name;
+      req.user.email = updatedUser.email;
+    }
+
+    res.send({
+      user: updatedUser,
+      alert: {
+        type: "success",
+        message: "Profile updated successfully",
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(e.statusCode || 500).send({
+      alert: {
+        type: "danger",
+        message: e.message || "Failed to update profile",
+      },
+    });
+  }
+};
+
+const updatePassword = async (req, res) => {
+  const updatePasswordSchema = z
+    .object({
+      currentPassword: z
+        .string()
+        .min(1, { message: "Current password is required" }),
+      newPassword: z
+        .string()
+        .min(8, { message: "New password must be at least 8 characters" }),
+      confirmNewPassword: z.string(),
+    })
+    .refine(data => data.newPassword === data.confirmNewPassword, {
+      message: "New passwords do not match",
+      path: ["confirmNewPassword"],
+    });
+
+  const result = updatePasswordSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).send({
+      alert: {
+        type: "danger",
+        message: "Please address the following:",
+        list: result.error.issues.map(x => x.message),
+      },
+    });
+  }
+
+  try {
+    await updateUserPasswordInDb(
+      req.user.id,
+      result.data.currentPassword,
+      result.data.newPassword
+    );
+
+    res.send({
+      alert: {
+        type: "success",
+        message: "Password updated successfully",
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(e.statusCode || 500).send({
+      alert: {
+        type: "danger",
+        message: e.message || "Failed to update password",
+      },
+    });
+  }
+};
+
 module.exports = {
   createUser,
+  updateProfile,
+  updatePassword,
 };
+

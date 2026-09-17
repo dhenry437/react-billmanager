@@ -7,6 +7,7 @@ import SignUp from "./components/SignUp";
 import PageNotFound from "./components/PageNotFound";
 import Landing from "./components/Landing";
 import HowItWorks from "./components/HowItWorks";
+import Settings from "./components/Settings";
 import { PrivateRoutes } from "./components/PrivateRoutes";
 import { useContext } from "react";
 import AuthContext from "./hooks/AuthContext";
@@ -26,6 +27,7 @@ function App() {
         <Route path="learn-more" element={<HowItWorks />} />
         <Route element={<PrivateRoutes />}>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="paydays" element={<EventList />} />
           <Route path="bills" element={<EventList />} />
           <Route path="bills/add" element={<EventForm />} />
