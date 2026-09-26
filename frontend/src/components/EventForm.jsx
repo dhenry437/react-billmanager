@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Select from "./ui/Select";
 import WeekdayBubbles from "./ui/WeekdayBubbles";
-import { format, isAfter } from "date-fns";
+import { format, isAfter, isValid, parseISO } from "date-fns";
 import {
   getCurrencySymbol,
   getOrdinalWeekdayOfMonth,
@@ -45,6 +45,9 @@ export const EventForm = () => {
   const [loading, setLoading] = useState({ form: false });
   const [fields, setFields] = useState(getInitialFields);
 
+  const parsedDate = fields.date ? parseISO(fields.date) : null;
+  const isDateValid = parsedDate ? isValid(parsedDate) : false;
+
   const fetchEventCallback = useCallback(
     async eventId => {
       const response = await getEventById(eventId);
@@ -65,11 +68,16 @@ export const EventForm = () => {
 
   // When date is changed, update end date if it is before date
   useEffect(() => {
-    setFields(fields =>
-      isAfter(fields.date, fields.recurringEndsOnDate)
+    setFields(fields => {
+      if (!fields.date || !fields.recurringEndsOnDate) return fields;
+      const dateObj = parseISO(fields.date);
+      const endDateObj = parseISO(fields.recurringEndsOnDate);
+      if (!isValid(dateObj) || !isValid(endDateObj)) return fields;
+
+      return isAfter(dateObj, endDateObj)
         ? { ...fields, recurringEndsOnDate: fields.date }
-        : fields
-    );
+        : fields;
+    });
   }, [fields.date]);
 
   const handleInputChange = e => {
@@ -86,9 +94,18 @@ export const EventForm = () => {
     setLoading({ ...loading, form: true });
     setAlerts({ ...alerts, form: null });
 
+    const payload = {
+      ...fields,
+      type: eventType,
+      recurringEndsOnDate:
+        fields.recurringEndsOnDate && isValid(parseISO(fields.recurringEndsOnDate))
+          ? fields.recurringEndsOnDate
+          : (isDateValid ? fields.date : format(new Date(), "yyyy-MM-dd")),
+    };
+
     const response = eventId
-      ? await updateEvent(eventId, { ...fields, type: eventType })
-      : await createEvent({ ...fields, type: eventType });
+      ? await updateEvent(eventId, payload)
+      : await createEvent(payload);
     if (response.status === 200) {
       setLoading({ ...loading, form: false });
       setAlerts({ ...alerts, form: response.data.alert });
@@ -312,10 +329,12 @@ export const EventForm = () => {
                             htmlFor="recurringMonthlyNth"
                             className="flex items-center font-medium text-gray-900">
                             Monthly on the{" "}
-                            {`${getOrdinalWeekdayOfMonth(fields.date)} ${format(
-                              fields.date,
-                              "EEEE"
-                            )}`}
+                            {isDateValid
+                              ? `${getOrdinalWeekdayOfMonth(parsedDate)} ${format(
+                                  parsedDate,
+                                  "EEEE"
+                                )}`
+                              : "selected day"}
                           </label>
                         </div>
                       </div>
@@ -335,7 +354,10 @@ export const EventForm = () => {
                           <label
                             htmlFor="recurringMonthlyDate"
                             className="font-medium text-gray-900">
-                            Monthly on the {format(fields.date, "do")}
+                            Monthly on the{" "}
+                            {isDateValid
+                              ? format(parsedDate, "do")
+                              : "selected day"}
                           </label>
                         </div>
                       </div>
@@ -399,7 +421,7 @@ export const EventForm = () => {
                           value={fields.recurringEndsOnDate}
                           onChange={handleInputChange}
                           type="date"
-                          min={format(fields.date, "yyyy-MM-dd")}
+                          min={isDateValid ? fields.date : undefined}
                           autoComplete="off"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                           required={fields.recurringEnds === "on"}

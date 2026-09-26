@@ -347,6 +347,64 @@ describe("calendar.controller.js", () => {
       expect(dayItem.targetSavings.bufferAmount).toBe(expectedBuffer);
       expect(dayItem.targetSavings.amount).toBe(unbufferedDay + expectedBuffer);
     });
+
+    it("should allocate 100% of an existing recurring bill when 0 paydays exist in the bill cycle before the bill due date", () => {
+      const recurringRent = {
+        id: "recurring-rent",
+        name: "Rent",
+        description: "Monthly rent",
+        amount: 1200,
+        type: "bill",
+        rruleString:
+          "DTSTART:20240115T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15",
+        rrule: RRule.fromString(
+          "DTSTART:20240115T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15"
+        ),
+        reactState: { recurring: true },
+      };
+
+      const paydaysWithGap = [
+        {
+          id: "old-payday",
+          name: "Old Job",
+          amount: 2000,
+          type: "payday",
+          rruleString:
+            "DTSTART:20250115T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=1;UNTIL=20250915T000000Z;BYMONTHDAY=15",
+          rrule: RRule.fromString(
+            "DTSTART:20250115T000000Z\nRRULE:WKST=SU;FREQ=MONTHLY;INTERVAL=1;UNTIL=20250915T000000Z;BYMONTHDAY=15"
+          ),
+        },
+        {
+          id: "new-payday",
+          name: "New Job",
+          amount: 2000,
+          type: "payday",
+          rruleString:
+            "DTSTART:20251016T000000Z\nRRULE:WKST=SU;FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
+          rrule: RRule.fromString(
+            "DTSTART:20251016T000000Z\nRRULE:WKST=SU;FREQ=WEEKLY;INTERVAL=1;BYDAY=FR"
+          ),
+        },
+      ];
+
+      const testDates = ["2025-10-14"];
+      const testResult = calculateDailyTargetSavings(
+        testDates,
+        [recurringRent],
+        paydaysWithGap
+      );
+
+      expect(
+        testResult.find(d => d.date === "2025-10-14").targetSavings.amount
+      ).toBe(1200);
+      expect(
+        testResult.find(d => d.date === "2025-10-14").targetSavings.breakdown
+      ).toContainEqual(
+        expect.objectContaining({ name: "Rent", amount: 1200 })
+      );
+    });
   });
 });
+
 

@@ -254,9 +254,17 @@ export default function Calendar() {
                 const isCurrentDate = isToday(date);
 
                 return (
-                  <button
+                  <div
                     key={format(date, "yyyy-MM-dd")}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleClickCell(date)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleClickCell(date);
+                      }
+                    }}
                     className={`${
                       isCurrentMonth
                         ? isSelectedDate
@@ -267,7 +275,7 @@ export default function Calendar() {
                         : isSelectedDate
                           ? "font-semibold text-white bg-gray-50"
                           : "bg-gray-50 text-gray-500"
-                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full`}
+                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full cursor-pointer text-left focus:outline-none`}
                   >
                     <div className="flex items-center justify-between">
                       <time
@@ -299,7 +307,7 @@ export default function Calendar() {
                         events={events.filter((x) => x.date === date)}
                       />
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>

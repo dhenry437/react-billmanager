@@ -104,7 +104,7 @@ export default function BreakdownModal(props) {
 
                         return (
                           <li key={i}>
-                            <Link to={`/bills/${id}`}>
+                            <Link to={id ? `/bills/${id}` : "/bills"}>
                               <div className="relative pb-8">
                                 {i !== breakdown.length - 1 || bufferAmount > 0 ? (
                                   <span

@@ -1,4 +1,10 @@
-import { differenceInWeeks, getWeeksInMonth, startOfMonth } from "date-fns";
+import {
+  differenceInWeeks,
+  getWeeksInMonth,
+  isValid,
+  parseISO,
+  startOfMonth,
+} from "date-fns";
 
 export const titleCase = str => {
   str = str.toLowerCase().split(" ");
@@ -28,9 +34,14 @@ export const ordinalSuffix = i => {
 };
 
 export const getOrdinalWeekdayOfMonth = date => {
-  const nWeeksDiff = differenceInWeeks(date, startOfMonth(date));
+  const d = typeof date === "string" ? parseISO(date) : date;
+  if (!d || !isValid(d)) {
+    return "";
+  }
 
-  return nWeeksDiff + 1 === getWeeksInMonth(date)
+  const nWeeksDiff = differenceInWeeks(d, startOfMonth(d));
+
+  return nWeeksDiff + 1 === getWeeksInMonth(d)
     ? "last"
     : ordinalSuffix(nWeeksDiff + 1);
 };

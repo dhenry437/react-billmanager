@@ -1,7 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import BreakdownModal from "./BreakdownModal";
-import { Link } from "react-router-dom";
 import { formatCurrency } from "../../util";
 
 export default function TargetSavings(props) {
@@ -11,16 +10,16 @@ export default function TargetSavings(props) {
   const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
   return (
     <>
-      <Link
+      <button
+        type="button"
         onClick={(event) => {
           event.stopPropagation();
           setBreakdownModalOpen(true);
         }}
-        className="inline-flex items-center rounded-md bg-gray-50 hover:bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
-        href="#"
+        className="inline-flex items-center rounded-md bg-gray-50 hover:bg-gray-200 px-1.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 cursor-pointer"
       >
         {formatCurrency(amount)}
-      </Link>
+      </button>
 
       <BreakdownModal
         breakdownModalOpen={breakdownModalOpen}

@@ -254,6 +254,8 @@ const calculateDepositEvents = (
                 const proportion =
                   passedPaydaysInCycle / totalPaydaysInBillCycle;
                 newTargetAmount = bill.amount * proportion;
+              } else {
+                newTargetAmount = bill.amount;
               }
               nextBillOccurrenceDate = nextOcc;
             }
@@ -324,6 +326,8 @@ const calculateDepositEvents = (
                 const proportion =
                   passedPaydaysInCycle / totalPaydaysInBillCycle;
                 oldTargetAmount = bill.amount * proportion;
+              } else {
+                oldTargetAmount = bill.amount;
               }
               oldNextBillDate = nextOcc;
             }
@@ -354,16 +358,7 @@ const calculateDepositEvents = (
           description: bill.description,
         });
       }
-      if (bill.name === "Rent" && paydayDateString === "2025-09-15") {
-        console.log(`-- ${bill.name} ${paydayDateString} --`);
-        console.log(`newTargetAmount = ${newTargetAmount}`);
-        console.log(`oldTargetAmount = ${oldTargetAmount}`);
-        console.log(`amountToDeposit = ${amountToDeposit}`);
-        console.log(`isBillDueOnPayday = ${isBillDueOnPayday}`);
-        console.log(`hasBillCycleRolledOver = ${hasBillCycleRolledOver}`);
-        console.log(`nextBillOccurrenceDate = ${nextBillOccurrenceDate}`);
-        console.log(`oldNextBillDate = ${oldNextBillDate}`);
-      }
+
     });
 
     const totalDepositAmount = depositBreakdown.reduce(
@@ -416,12 +411,7 @@ const calculateDailyTargetSavings = (
       }
     }
 
-    if (dateStr === "2025-09-15") {
-      console.log(`-- ${dateStr} --`);
-      console.log(`lastPayday = ${lastPayday}`);
-      console.log(`nextPayday = ${nextPayday}`);
-      console.log(`-- -- `);
-    }
+
 
     for (const bill of allBillEvents) {
       const billRule = bill.rrule;
@@ -438,10 +428,7 @@ const calculateDailyTargetSavings = (
           true
         ).length;
 
-        if (dateStr === "2025-09-15" && bill.name === "Rent") {
-          console.log(`-- ${dateStr} ${bill.name} --`);
-          console.log(`occurrencesInPaydayCycle = ${occurrencesInPaydayCycle}`);
-        }
+
 
         if (occurrencesInPaydayCycle > 1) {
           const remainingOccurrences = billRule.between(
@@ -522,18 +509,8 @@ const calculateDailyTargetSavings = (
             if (totalPaydaysInBillCycle > 0) {
               const proportion = passedPaydaysInCycle / totalPaydaysInBillCycle;
               billProportion = bill.amount * proportion;
-            } else if (!isRecurring || isFirstOccurrence) {
+            } else {
               billProportion = bill.amount;
-            }
-
-            if (dateStr === "2025-09-15" && bill.name === "Rent") {
-              console.log(`-- ${dateStr} --`);
-              console.log(`billProportion = ${billProportion}`);
-              console.log(
-                `totalPaydaysInBillCycle = ${totalPaydaysInBillCycle}`
-              );
-              console.log(`nextBillOccurrence = ${nextBillOccurrence}`);
-              console.log(`-- -- `);
             }
           }
         }

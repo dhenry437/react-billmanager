@@ -44,14 +44,15 @@ export default function CalendarEvent(props) {
     <div className="flex group mb-1">
       {type === "deposit" ? (
         <>
-          <Link
-            className={`flex-grow`}
+          <button
+            type="button"
+            className="flex-grow text-left cursor-pointer"
             onClick={event => {
               event.stopPropagation();
               setBreakdownModalOpen(true);
             }}>
             {calendarEventContent}
-          </Link>
+          </button>
 
           <BreakdownModal
             breakdownModalOpen={breakdownModalOpen}
