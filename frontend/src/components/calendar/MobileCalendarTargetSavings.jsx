@@ -5,7 +5,7 @@ import { formatCurrency } from "../../util";
 
 export default function MobileCalendarTargetSavings(props) {
   const { targetSavings } = props;
-  const { amount, breakdown, bufferAmount } = targetSavings || {};
+  const { amount, breakdown } = targetSavings || {};
 
   const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
 

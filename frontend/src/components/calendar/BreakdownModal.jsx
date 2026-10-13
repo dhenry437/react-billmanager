@@ -85,8 +85,8 @@ export default function BreakdownModal(props) {
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <DialogPanel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full max-w-fit sm:p-6 sm:pt-9">
-                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+              <DialogPanel className="relative flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full max-w-fit sm:p-6 sm:pt-9">
+                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block z-10">
                   <button
                     type="button"
                     className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -96,7 +96,7 @@ export default function BreakdownModal(props) {
                     <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
-                <div className="py-2 flow-root px-3">
+                <div className="pt-2 pb-4 flow-root pl-3 pr-4 sm:pr-5 overflow-y-auto flex-1 min-h-0 no-scrollbar">
                   {(breakdown && breakdown.length > 0) || bufferAmount > 0 ? (
                     <ul role="list" className="-mb-8">
                       {breakdown?.map((breakdownItem, i) => {
@@ -189,6 +189,7 @@ export default function BreakdownModal(props) {
                 <Transition
                   show={calculatorOpen}
                   as="div"
+                  className="shrink-0"
                   enter="transition-all ease-out duration-300 overflow-hidden"
                   enterFrom="opacity-0 max-h-0 -translate-y-2"
                   enterTo="opacity-100 max-h-48 translate-y-0"
@@ -301,7 +302,7 @@ export default function BreakdownModal(props) {
                   </div>
                 </Transition>
 
-                <div className="mt-4 sm:mt-6 flex items-center gap-2">
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 shrink-0">
                   <button
                     type="button"
                     className="inline-flex flex-1 justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
