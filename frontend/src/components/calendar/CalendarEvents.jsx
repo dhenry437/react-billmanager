@@ -86,7 +86,7 @@ export default function CalendarEvents(props) {
             />
           )}
           {/*  -- Dots for Mobile -- */}
-          <span className="-mx-0.5 mt-auto flex flex-wrap-reverse lg:hidden">
+          <span className="-mx-0.5 mt-auto flex items-center lg:hidden">
             {sortedEvents
               .filter(x => x.deposit)
               ?.map(event => {
@@ -100,7 +100,7 @@ export default function CalendarEvents(props) {
                   />
                 );
               })}
-            {sortedEvents.map(event => {
+            {visibleEvents.map(event => {
               const { id } = event;
               return (
                 <span
@@ -111,6 +111,9 @@ export default function CalendarEvents(props) {
                 />
               );
             })}
+            {hiddenCount > 0 && (
+              <span className="mx-0.5 mb-1 h-1.5 w-1.5 rounded-full bg-gray-400" />
+            )}
           </span>
         </>
       )}

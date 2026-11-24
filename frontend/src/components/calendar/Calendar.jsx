@@ -273,15 +273,15 @@ export default function Calendar() {
                   >
                     <div className="flex items-center justify-between">
                       <time
-                        className={`${
+                        className={`flex h-6 w-6 items-center justify-center rounded-full proportional-nums leading-none ${
                           isSelectedDate
-                            ? `flex h-6 w-6 items-center justify-center rounded-full text-white ${
+                            ? `text-white ${
                                 isCurrentDate ? "bg-indigo-600" : "bg-gray-900"
                               }`
                             : isCurrentDate
-                              ? "flex font-semibold text-indigo-600"
-                              : "flex"
-                        } ml-auto lg:ml-0`}
+                              ? "font-semibold text-indigo-600"
+                              : ""
+                        } ml-auto -mr-1.5 -mt-0.5 lg:m-0`}
                         dateTime={format(date, "yyyy-MM-dd")}
                       >
                         {getDate(date)}
