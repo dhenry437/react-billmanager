@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import {
   Dialog,
@@ -11,8 +11,10 @@ import {
 import { format, isValid, parseISO } from "date-fns";
 import { Link } from "react-router-dom";
 import { formatCurrency, titleCase } from "../../util";
+import AuthContext from "../../hooks/AuthContext";
 
 export default function DayEventsModal(props) {
+  const { privacyMode } = useContext(AuthContext);
   const { dayEventsModalOpen, setDayEventsModalOpen, date, events } = props;
 
   const parsedDate = typeof date === "string" ? parseISO(date) : date;
@@ -124,9 +126,11 @@ export default function DayEventsModal(props) {
                                 )}
                               </div>
                             </div>
-                            <div className="flex-shrink-0 font-semibold">
-                              {formatCurrency(amount)}
-                            </div>
+                            {!(privacyMode && type === "payday") && (
+                              <div className="flex-shrink-0 font-semibold">
+                                {formatCurrency(amount)}
+                              </div>
+                            )}
                           </Link>
                         </li>
                       );

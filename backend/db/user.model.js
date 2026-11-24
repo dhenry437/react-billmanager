@@ -16,6 +16,7 @@ module.exports = (sequelize, Sequelize) => {
         dateFormat: "dd/MM/yyyy",
         bufferType: "none",
         bufferValue: 0,
+        privacyMode: false,
       },
     },
   });

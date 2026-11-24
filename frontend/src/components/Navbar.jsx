@@ -9,14 +9,20 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  EyeIcon,
+  EyeSlashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { Outlet, Link, useMatch } from "react-router-dom";
 import mark from "../assets/mark.svg";
 import AuthContext from "../hooks/AuthContext";
 import Jdenticon from "react-jdenticon";
 
 export default function Navbar() {
-  const { user, signOutUser } = useContext(AuthContext);
+  const { user, signOutUser, privacyMode, togglePrivacyMode } =
+    useContext(AuthContext);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", current: useMatch("/dashboard") },
@@ -71,7 +77,37 @@ export default function Navbar() {
                   <div className="hidden sm:ml-6 sm:flex sm:items-center">
                     {/* Profile dropdown */}
                     {user ? (
-                      <Menu as="div" className="relative ml-3">
+                      <>
+                        <button
+                          type="button"
+                          onClick={togglePrivacyMode}
+                          title={
+                            privacyMode
+                              ? "Privacy mode on (click to show income)"
+                              : "Enable privacy mode (hide income)"
+                          }
+                          aria-label={
+                            privacyMode
+                              ? "Disable privacy mode"
+                              : "Enable privacy mode"
+                          }
+                          aria-pressed={privacyMode}
+                          className={classNames(
+                            privacyMode
+                              ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              : "bg-white text-gray-400 hover:bg-gray-100 hover:text-gray-500",
+                            "rounded-full p-2.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                          )}>
+                          {privacyMode ? (
+                            <EyeSlashIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                          )}
+                        </button>
+                        <Menu as="div" className="relative ml-3">
                         <div>
                           <MenuButton className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                             <span className="sr-only">Open user menu</span>
@@ -119,6 +155,7 @@ export default function Navbar() {
                           </MenuItems>
                         </Transition>
                       </Menu>
+                      </>
                     ) : (
                       <Link
                         to="/sign-in"
@@ -127,7 +164,38 @@ export default function Navbar() {
                       </Link>
                     )}
                   </div>
-                  <div className="-mr-2 flex items-center sm:hidden">
+                  <div className="-mr-2 flex items-center gap-1 sm:hidden">
+                    {user && (
+                      <button
+                        type="button"
+                        onClick={togglePrivacyMode}
+                        title={
+                          privacyMode
+                            ? "Privacy mode on (click to show income)"
+                            : "Enable privacy mode (hide income)"
+                        }
+                        aria-label={
+                          privacyMode
+                            ? "Disable privacy mode"
+                            : "Enable privacy mode"
+                        }
+                        aria-pressed={privacyMode}
+                        className={classNames(
+                          privacyMode
+                            ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            : "bg-white text-gray-400 hover:bg-gray-100 hover:text-gray-500",
+                          "inline-flex items-center justify-center rounded-md p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        )}>
+                        {privacyMode ? (
+                          <EyeSlashIcon
+                            className="block h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <EyeIcon className="block h-5 w-5" aria-hidden="true" />
+                        )}
+                      </button>
+                    )}
                     {/* Mobile menu button */}
                     <DisclosureButton className="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                       <span className="sr-only">Open main menu</span>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getUser, signOut } from "../data/repository";
+import { getUser, signOut, updatePreferences } from "../data/repository";
 import { setGlobalCurrency } from "../util";
 import PropTypes from "prop-types";
 import AuthContext from "./AuthContext";
@@ -7,6 +7,13 @@ import AuthContext from "./AuthContext";
 export default function AuthContextProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    try {
+      return localStorage.getItem("privacyMode") === "true";
+    } catch {
+      return false;
+    }
+  });
 
   const getUserCallback = useCallback(async () => {
     const response = await getUser();
@@ -24,7 +31,43 @@ export default function AuthContextProvider({ children }) {
     if (user?.preferences?.currency) {
       setGlobalCurrency(user.preferences.currency);
     }
+    if (typeof user?.preferences?.privacyMode === "boolean") {
+      setPrivacyMode(user.preferences.privacyMode);
+      try {
+        localStorage.setItem(
+          "privacyMode",
+          String(user.preferences.privacyMode)
+        );
+      } catch {
+        // Ignore storage errors
+      }
+    }
   }, [user]);
+
+  const togglePrivacyMode = useCallback(async () => {
+    const nextValue = !privacyMode;
+    setPrivacyMode(nextValue);
+    try {
+      localStorage.setItem("privacyMode", String(nextValue));
+    } catch {
+      // Ignore storage errors
+    }
+
+    if (user) {
+      setUser(prevUser =>
+        prevUser
+          ? {
+              ...prevUser,
+              preferences: {
+                ...(prevUser.preferences || {}),
+                privacyMode: nextValue,
+              },
+            }
+          : prevUser
+      );
+      await updatePreferences({ privacyMode: nextValue });
+    }
+  }, [privacyMode, user]);
 
   const signInUser = user => {
     setUser(user);
@@ -39,11 +82,13 @@ export default function AuthContextProvider({ children }) {
     () => ({
       user,
       loading,
+      privacyMode,
+      togglePrivacyMode,
       setUser,
       signInUser,
       signOutUser,
     }),
-    [user, loading]
+    [user, loading, privacyMode, togglePrivacyMode]
   );
 
   return (

@@ -184,6 +184,7 @@ const updatePreferences = async (req, res) => {
     dateFormat: z.enum(["dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"]).optional(),
     bufferType: z.enum(["none", "fixed", "percentage"]).optional(),
     bufferValue: z.number().min(0).optional(),
+    privacyMode: z.boolean().optional(),
   });
 
   const result = updatePreferencesSchema.safeParse(req.body);

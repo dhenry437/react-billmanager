@@ -100,11 +100,13 @@ describe("user.service.js", () => {
         currency: "USD",
         bufferType: "percentage",
         bufferValue: 10,
+        privacyMode: true,
       });
 
       expect(mockUser.preferences.currency).toBe("USD");
       expect(mockUser.preferences.bufferType).toBe("percentage");
       expect(mockUser.preferences.bufferValue).toBe(10);
+      expect(mockUser.preferences.privacyMode).toBe(true);
       expect(mockUser.preferences.weekStartsOn).toBe(1);
       expect(mockUser.save).toHaveBeenCalled();
       expect(result).toEqual(mockUser.preferences);

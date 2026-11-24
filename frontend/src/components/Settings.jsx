@@ -12,10 +12,12 @@ import Spinner from "./Spinner";
 import Jdenticon from "react-jdenticon";
 import { useNavigate } from "react-router-dom";
 import { CURRENCIES, getCurrencySymbol } from "../util";
+import { Switch } from "@headlessui/react";
 import {
   UserCircleIcon,
   KeyIcon,
   ShieldCheckIcon,
+  EyeSlashIcon,
   AdjustmentsHorizontalIcon,
   ExclamationTriangleIcon,
   ArrowDownTrayIcon,
@@ -56,6 +58,7 @@ export default function Settings() {
     dateFormat: "dd/MM/yyyy",
     bufferType: "none",
     bufferValue: 0,
+    privacyMode: false,
   });
   const [preferencesAlert, setPreferencesAlert] = useState(null);
   const [preferencesLoading, setPreferencesLoading] = useState(false);
@@ -83,6 +86,7 @@ export default function Settings() {
           dateFormat: user.preferences.dateFormat || "dd/MM/yyyy",
           bufferType: user.preferences.bufferType || "none",
           bufferValue: Number(user.preferences.bufferValue) || 0,
+          privacyMode: Boolean(user.preferences.privacyMode),
         });
       }
     }
@@ -658,6 +662,51 @@ export default function Settings() {
                         Adjusts the start column of the month view calendar
                         grid.
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Privacy Mode Section */}
+                  <div className="border-t border-gray-100 pt-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <EyeSlashIcon className="h-5 w-5 text-indigo-600" />
+                          <h3 className="text-base font-semibold leading-6 text-gray-900">
+                            Privacy Mode
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Hide payday and income amounts across the calendar and
+                          payday views without placeholders. You can also toggle
+                          this anytime from the eye icon in the top navigation
+                          bar.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={preferencesData.privacyMode}
+                        onChange={checked =>
+                          setPreferencesData(prev => ({
+                            ...prev,
+                            privacyMode: checked,
+                          }))
+                        }
+                        className={classNames(
+                          preferencesData.privacyMode
+                            ? "bg-indigo-600"
+                            : "bg-gray-200",
+                          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                        )}>
+                        <span className="sr-only">Enable privacy mode</span>
+                        <span
+                          aria-hidden="true"
+                          className={classNames(
+                            preferencesData.privacyMode
+                              ? "translate-x-5"
+                              : "translate-x-0",
+                            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                          )}
+                        />
+                      </Switch>
                     </div>
                   </div>
 

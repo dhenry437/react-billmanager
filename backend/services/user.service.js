@@ -75,6 +75,7 @@ const updateUserPreferencesInDb = async (userId, newPreferences) => {
     dateFormat: "dd/MM/yyyy",
     bufferType: "none",
     bufferValue: 0,
+    privacyMode: false,
     ...(user.preferences || {}),
     ...newPreferences,
   };

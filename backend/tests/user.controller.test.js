@@ -202,6 +202,7 @@ describe("user.controller.js", () => {
         dateFormat: "MM/dd/yyyy",
         bufferType: "percentage",
         bufferValue: 15,
+        privacyMode: true,
       };
 
       const mockUpdated = {
@@ -210,6 +211,7 @@ describe("user.controller.js", () => {
         dateFormat: "MM/dd/yyyy",
         bufferType: "percentage",
         bufferValue: 15,
+        privacyMode: true,
       };
       userService.updateUserPreferencesInDb.mockResolvedValue(mockUpdated);
 

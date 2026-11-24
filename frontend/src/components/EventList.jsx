@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { formatCurrency, sentenceCase, titleCase } from "../util";
 import Spinner from "./Spinner";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { deleteEventById, getEventsCurrentUser } from "../data/repository";
 import Alert from "./Alert";
+import AuthContext from "../hooks/AuthContext";
 
 export default function EventList() {
+  const { privacyMode } = useContext(AuthContext);
   const [tableData, setTableData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
 
   const eventType = window.location.pathname.split("/")[1].slice(0, -1);
+  const hideAmount = privacyMode && eventType === "payday";
 
   const fetchEventsCallback = useCallback(async () => {
     const response = await getEventsCurrentUser(eventType);
@@ -114,11 +117,13 @@ export default function EventList() {
                   className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell">
                   Description
                 </th>
-                <th
-                  scope="col"
-                  className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 sm:table-cell">
-                  Amount
-                </th>
+                {!hideAmount && (
+                  <th
+                    scope="col"
+                    className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 sm:table-cell">
+                    Amount
+                  </th>
+                )}
                 <th
                   scope="col"
                   className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -141,18 +146,24 @@ export default function EventList() {
                       <dd className="mt-1 truncate text-gray-700" title={row.description}>
                         {row.description}
                       </dd>
-                      <dt className="sr-only sm:hidden">Amount</dt>
-                      <dd className="mt-1 truncate text-gray-500 sm:hidden">
-                        {formatCurrency(row.amount)}
-                      </dd>
+                      {!hideAmount && (
+                        <>
+                          <dt className="sr-only sm:hidden">Amount</dt>
+                          <dd className="mt-1 truncate text-gray-500 sm:hidden">
+                            {formatCurrency(row.amount)}
+                          </dd>
+                        </>
+                      )}
                     </dl>
                   </td>
                   <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell max-w-xs truncate" title={row.description}>
                     {row.description}
                   </td>
-                  <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">
-                    {formatCurrency(row.amount)}
-                  </td>
+                  {!hideAmount && (
+                    <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">
+                      {formatCurrency(row.amount)}
+                    </td>
+                  )}
                   <td className="px-3 py-4 text-sm text-gray-500">
                     {sentenceCase(row.recurring)}
                   </td>

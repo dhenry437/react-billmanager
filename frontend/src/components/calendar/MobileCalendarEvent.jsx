@@ -1,8 +1,11 @@
+import { useContext } from "react";
 import PropTypes from "prop-types";
 import { formatCurrency, titleCase } from "../../util";
 import { Link } from "react-router-dom";
+import AuthContext from "../../hooks/AuthContext";
 
 export default function MobileCalendarEvent(props) {
+  const { privacyMode } = useContext(AuthContext);
   const { id, type, name, description, amount, getEventColour } = props;
   return (
     <li className="group flex p-4 pr-6">
@@ -29,7 +32,9 @@ export default function MobileCalendarEvent(props) {
         </span>
         <p className=" mt-2 font-semibold text-gray-900">{name}</p>
         <p className="text-gray-800">{description}</p>
-        <p className="mt-2 text-gray-700">{formatCurrency(amount)}</p>
+        {!(privacyMode && type === "payday") && (
+          <p className="mt-2 text-gray-700">{formatCurrency(amount)}</p>
+        )}
       </div>
       <Link
         to={`/${type}s/${id}`}
