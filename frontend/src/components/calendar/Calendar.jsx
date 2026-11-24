@@ -103,7 +103,7 @@ export default function Calendar() {
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-300 lg:h-0 lg:min-h-[742px] rounded-md overflow-hidden">
+    <div className="bg-gray-50 border border-gray-300 rounded-md overflow-hidden">
       <div className="lg:flex lg:h-full lg:flex-col">
         <header className="flex items-center justify-between border-b border-gray-300 px-6 py-4 lg:flex-none">
           <h1 className="text-base font-semibold leading-6 text-gray-900">
@@ -232,7 +232,7 @@ export default function Calendar() {
             </Menu>
           </div>
         </header>
-        <div className="lg:flex lg:flex-auto lg:flex-col">
+        <div className="border-b border-gray-300 lg:border-b-0 lg:flex lg:flex-auto lg:flex-col">
           <div className="grid grid-cols-7 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
             {weekdays.map((weekday) => (
               <div key={weekday} className="bg-white py-2">
@@ -267,24 +267,20 @@ export default function Calendar() {
                     }}
                     className={`${
                       isCurrentMonth
-                        ? isSelectedDate
-                          ? "bg-white font-semibold text-white"
-                          : isCurrentDate
-                            ? "bg-white font-semibold text-indigo-600"
-                            : "bg-white text-gray-900"
-                        : isSelectedDate
-                          ? "font-semibold text-white bg-gray-50"
-                          : "bg-gray-50 text-gray-500"
-                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-full cursor-pointer text-left focus:outline-none`}
+                        ? "bg-white text-gray-900"
+                        : "bg-gray-50 text-gray-500"
+                    } flex flex-col px-3 py-2 h-14 hover:bg-gray-100 focus:z-10 w-full lg:h-[136px] overflow-hidden cursor-pointer text-left focus:outline-none`}
                   >
                     <div className="flex items-center justify-between">
                       <time
                         className={`${
                           isSelectedDate
-                            ? `flex h-6 w-6 items-center justify-center rounded-full ${
+                            ? `flex h-6 w-6 items-center justify-center rounded-full text-white ${
                                 isCurrentDate ? "bg-indigo-600" : "bg-gray-900"
                               }`
-                            : "flex"
+                            : isCurrentDate
+                              ? "flex font-semibold text-indigo-600"
+                              : "flex"
                         } ml-auto lg:ml-0`}
                         dateTime={format(date, "yyyy-MM-dd")}
                       >
@@ -304,6 +300,7 @@ export default function Calendar() {
                     {events.filter((x) => x.date === date).length > 0 && (
                       <CalendarEvents
                         key={date}
+                        date={date}
                         events={events.filter((x) => x.date === date)}
                       />
                     )}

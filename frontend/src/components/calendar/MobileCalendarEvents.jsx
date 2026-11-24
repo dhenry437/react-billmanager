@@ -5,12 +5,15 @@ import MobileCalendarTargetSavings from "./MobileCalendarTargetSavings";
 
 export default function MobileCalendarEvents(props) {
   const { events, getEventColour, targetSavings } = props;
+  const sortedEvents = [...events].sort(
+    (a, b) => (a.type === "payday" ? 0 : 1) - (b.type === "payday" ? 0 : 1)
+  );
   return (
     <div className="px-4 py-10 sm:px-6 lg:hidden">
       <ol className="divide-y divide-gray-100 overflow-hidden rounded-lg bg-white text-sm shadow ring-1 ring-black ring-opacity-5">
         <MobileCalendarTargetSavings targetSavings={targetSavings} />
 
-        {events.map(event => {
+        {sortedEvents.map(event => {
           const { id, type, name, description, amount } = event;
 
           return (

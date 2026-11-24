@@ -1,8 +1,11 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import CalendarEvent from "./CalendarEvent";
+import DayEventsModal from "./DayEventsModal";
 
 export default function CalendarEvents(props) {
-  const { events } = props;
+  const { events, date } = props;
+  const [dayEventsModalOpen, setDayEventsModalOpen] = useState(false);
 
   const getEventColour = type => {
     switch (type) {
@@ -15,13 +18,26 @@ export default function CalendarEvents(props) {
     }
   };
 
+  const sortedEvents = [...events].sort(
+    (a, b) => (a.type === "payday" ? 0 : 1) - (b.type === "payday" ? 0 : 1)
+  );
+
+  const MAX_ITEMS_IN_CELL = 3;
+  const shouldCollapse = sortedEvents.length > MAX_ITEMS_IN_CELL;
+  const visibleEvents = shouldCollapse
+    ? sortedEvents.slice(0, MAX_ITEMS_IN_CELL - 1)
+    : sortedEvents;
+  const hiddenCount = shouldCollapse
+    ? sortedEvents.length - visibleEvents.length
+    : 0;
+
   return (
     <>
-      {events.length > 0 && (
+      {sortedEvents.length > 0 && (
         <>
           {/* -- Desktop -- */}
           <ol className="mt-2 w-full hidden lg:block">
-            {events
+            {sortedEvents
               .filter(x => x.deposit)
               ?.map(event => {
                 const { amount, breakdown } = event.deposit;
@@ -36,8 +52,7 @@ export default function CalendarEvents(props) {
                   />
                 );
               })}
-            {/* {events.slice(0, 2).map(event => { */}
-            {events.map(event => {
+            {visibleEvents.map(event => {
               const { type, id, amount, name } = event;
 
               return (
@@ -50,13 +65,29 @@ export default function CalendarEvents(props) {
                 />
               );
             })}
-            {/* {events.length > 2 && (
-              <li className="text-gray-500">+ {events.length - 2} more</li>
-            )} */}
+            {hiddenCount > 0 && (
+              <li
+                onClick={event => {
+                  event.stopPropagation();
+                  setDayEventsModalOpen(true);
+                }}
+                className="text-center font-normal text-gray-500 hover:text-indigo-600"
+              >
+                + {hiddenCount} more
+              </li>
+            )}
           </ol>
+          {hiddenCount > 0 && (
+            <DayEventsModal
+              dayEventsModalOpen={dayEventsModalOpen}
+              setDayEventsModalOpen={setDayEventsModalOpen}
+              date={date}
+              events={sortedEvents}
+            />
+          )}
           {/*  -- Dots for Mobile -- */}
           <span className="-mx-0.5 mt-auto flex flex-wrap-reverse lg:hidden">
-            {events
+            {sortedEvents
               .filter(x => x.deposit)
               ?.map(event => {
                 const { id } = event;
@@ -69,7 +100,7 @@ export default function CalendarEvents(props) {
                   />
                 );
               })}
-            {events.map(event => {
+            {sortedEvents.map(event => {
               const { id } = event;
               return (
                 <span
@@ -89,4 +120,5 @@ export default function CalendarEvents(props) {
 
 CalendarEvents.propTypes = {
   events: PropTypes.array.isRequired,
+  date: PropTypes.string,
 };

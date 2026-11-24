@@ -72,6 +72,12 @@ const getCalendarEvents = async (req, res) => {
       })
     );
 
+    // Ensure paydays always appear before bills
+    monthViewEvents.sort(
+      (a, b) =>
+        (a.type === "payday" ? 0 : 1) - (b.type === "payday" ? 0 : 1)
+    );
+
     const allBillEvents = events.filter(event => event.type === "bill"); // Get all bill events
     const allPaydayEvents = events.filter(event => event.type === "payday"); // Get all payday events
     const monthViewPaydayEvents = monthViewEvents.filter(
